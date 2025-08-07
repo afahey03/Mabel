@@ -1,0 +1,19 @@
+let name = "Mabel"
+print "Hello, " + name + "!"
+
+let numbers = [1, 2, 3, 4, 5]
+print "Numbers: " + str(numbers)
+print "Length: " + str(len(numbers))
+print "First number: " + str(numbers[0])
+
+let sum = 0
+let i = 0
+while (i < len(numbers)) {
+    sum = sum + numbers[i]
+    i = i + 1
+}
+print "Sum: " + str(sum)
+
+if (sum > 10) {
+    print "Sum is greater than 10!"
+}

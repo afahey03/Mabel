@@ -1,0 +1,295 @@
+import java.util.*;
+
+class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
+    private final Chunk chunk = new Chunk();
+    private final Map<String, Integer> globals = new HashMap<>();
+
+    public Chunk compile(List<Stmt> statements) {
+        for (Stmt statement : statements) {
+            compile(statement);
+        }
+        return chunk;
+    }
+
+    private void compile(Stmt stmt) {
+        stmt.accept(this);
+    }
+
+    private void compile(Expr expr) {
+        expr.accept(this);
+    }
+
+    @Override
+    public Void visitLiteralExpr(Expr.Literal expr) {
+        Object value = expr.value;
+        if (value == null) {
+            emitByte(OpCode.NIL);
+        } else if (value instanceof Boolean) {
+            emitByte((Boolean) value ? OpCode.TRUE : OpCode.FALSE);
+        } else {
+            emitConstant(value);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitBinaryExpr(Expr.Binary expr) {
+        compile(expr.left);
+        compile(expr.right);
+
+        switch (expr.operator.type) {
+            case PLUS: emitByte(OpCode.ADD); break;
+            case MINUS: emitByte(OpCode.SUBTRACT); break;
+            case MULTIPLY: emitByte(OpCode.MULTIPLY); break;
+            case DIVIDE: emitByte(OpCode.DIVIDE); break;
+            case MODULO: emitByte(OpCode.MODULO); break;
+            case EQUALS: emitByte(OpCode.EQUAL); break;
+            case NOT_EQUALS: emitBytes(OpCode.EQUAL, OpCode.NOT); break;
+            case GREATER: emitByte(OpCode.GREATER); break;
+            case GREATER_EQUAL: emitBytes(OpCode.LESS, OpCode.NOT); break;
+            case LESS: emitByte(OpCode.LESS); break;
+            case LESS_EQUAL: emitBytes(OpCode.GREATER, OpCode.NOT); break;
+            default:
+                throw new RuntimeException("Unknown binary operator: " + expr.operator.type);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitUnaryExpr(Expr.Unary expr) {
+        compile(expr.right);
+
+        switch (expr.operator.type) {
+            case MINUS: emitByte(OpCode.NEGATE); break;
+            case NOT: emitByte(OpCode.NOT); break;
+            default:
+                throw new RuntimeException("Unknown unary operator: " + expr.operator.type);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitVariableExpr(Expr.Variable expr) {
+        int constant = makeConstant(expr.name.lexeme);
+        emitBytes(OpCode.GET_GLOBAL, (byte) constant);
+        return null;
+    }
+
+    @Override
+    public Void visitAssignExpr(Expr.Assign expr) {
+        compile(expr.value);
+        int constant = makeConstant(expr.name.lexeme);
+        emitBytes(OpCode.SET_GLOBAL, (byte) constant);
+        return null;
+    }
+
+    @Override
+    public Void visitLogicalExpr(Expr.Logical expr) {
+        compile(expr.left);
+
+        if (expr.operator.type == TokenType.OR) {
+            int elseJump = emitJump(OpCode.JUMP_IF_FALSE);
+            int endJump = emitJump(OpCode.JUMP);
+
+            patchJump(elseJump);
+            emitByte(OpCode.POP);
+
+            compile(expr.right);
+            patchJump(endJump);
+        } else {
+            int endJump = emitJump(OpCode.JUMP_IF_FALSE);
+
+            emitByte(OpCode.POP);
+            compile(expr.right);
+
+            patchJump(endJump);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitCallExpr(Expr.Call expr) {
+        // Compile arguments first
+        for (Expr argument : expr.arguments) {
+            compile(argument);
+        }
+        // Then compile the function being called
+        compile(expr.callee);
+        // Emit call instruction with argument count
+        emitBytes(OpCode.CALL, (byte) expr.arguments.size());
+        return null;
+    }
+
+    @Override
+    public Void visitArrayExpr(Expr.Array expr) {
+        for (Expr element : expr.elements) {
+            compile(element);
+        }
+        emitBytes(OpCode.ARRAY, (byte) expr.elements.size());
+        return null;
+    }
+
+    @Override
+    public Void visitIndexExpr(Expr.Index expr) {
+        compile(expr.object);
+        compile(expr.index);
+        emitByte(OpCode.INDEX_GET);
+        return null;
+    }
+
+    @Override
+    public Void visitGroupingExpr(Expr.Grouping expr) {
+        compile(expr.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitGetExpr(Expr.Get expr) {
+        throw new RuntimeException("Get expressions not implemented");
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        compile(stmt.expression);
+        emitByte(OpCode.POP);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        compile(stmt.expression);
+        emitByte(OpCode.PRINT);
+        return null;
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        if (stmt.initializer != null) {
+            compile(stmt.initializer);
+        } else {
+            emitByte(OpCode.NIL);
+        }
+
+        int constant = makeConstant(stmt.name.lexeme);
+        emitBytes(OpCode.DEFINE_GLOBAL, (byte) constant);
+        return null;
+    }
+
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        for (Stmt statement : stmt.statements) {
+            if (statement != null) {
+                compile(statement);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitIfStmt(Stmt.If stmt) {
+        compile(stmt.condition);
+
+        int thenJump = emitJump(OpCode.JUMP_IF_FALSE);
+        emitByte(OpCode.POP);
+        compile(stmt.thenBranch);
+
+        int elseJump = emitJump(OpCode.JUMP);
+
+        patchJump(thenJump);
+        emitByte(OpCode.POP);
+
+        if (stmt.elseBranch != null) compile(stmt.elseBranch);
+        patchJump(elseJump);
+        return null;
+    }
+
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt) {
+        int loopStart = chunk.size();
+        compile(stmt.condition);
+
+        int exitJump = emitJump(OpCode.JUMP_IF_FALSE);
+        emitByte(OpCode.POP);
+        compile(stmt.body);
+        emitLoop(loopStart);
+
+        patchJump(exitJump);
+        emitByte(OpCode.POP);
+        return null;
+    }
+
+    @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
+        throw new RuntimeException("Functions not fully implemented in this version");
+    }
+
+    @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        if (stmt.value != null) {
+            compile(stmt.value);
+        } else {
+            emitByte(OpCode.NIL);
+        }
+        emitByte(OpCode.RETURN);
+        return null;
+    }
+
+    private void emitByte(OpCode op) {
+        chunk.write(op, 1);
+    }
+
+    private void emitByte(byte b) {
+        chunk.write(b, 1);
+    }
+
+    private void emitBytes(OpCode op1, OpCode op2) {
+        emitByte(op1);
+        emitByte(op2);
+    }
+
+    private void emitBytes(OpCode op, byte b) {
+        emitByte(op);
+        emitByte(b);
+    }
+
+    private void emitConstant(Object value) {
+        emitBytes(OpCode.CONSTANT, (byte) makeConstant(value));
+    }
+
+    private int makeConstant(Object value) {
+        int constant = chunk.addConstant(value);
+        if (constant > 255) {
+            throw new RuntimeException("Too many constants in one chunk.");
+        }
+        return constant;
+    }
+
+    private int emitJump(OpCode instruction) {
+        emitByte(instruction);
+        emitByte((byte) 0xff);
+        emitByte((byte) 0xff);
+        return chunk.size() - 2;
+    }
+
+    private void patchJump(int offset) {
+        int jump = chunk.size() - offset - 2;
+
+        if (jump > 0xffff) {
+            throw new RuntimeException("Too much code to jump over.");
+        }
+
+        // Write the jump offset as unsigned bytes
+        chunk.set(offset, (byte) ((jump >> 8) & 0xff));
+        chunk.set(offset + 1, (byte) (jump & 0xff));
+    }
+
+    private void emitLoop(int loopStart) {
+        emitByte(OpCode.LOOP);
+
+        int offset = chunk.size() - loopStart + 2;
+        if (offset > 0xffff) throw new RuntimeException("Loop body too large.");
+
+        emitByte((byte) ((offset >> 8) & 0xff));
+        emitByte((byte) (offset & 0xff));
+    }
+}
