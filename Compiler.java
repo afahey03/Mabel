@@ -2,7 +2,6 @@ import java.util.*;
 
 class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Chunk chunk = new Chunk();
-    private final Map<String, Integer> globals = new HashMap<>();
 
     public Chunk compile(List<Stmt> statements) {
         for (Stmt statement : statements) {
@@ -38,17 +37,39 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         compile(expr.right);
 
         switch (expr.operator.type) {
-            case PLUS: emitByte(OpCode.ADD); break;
-            case MINUS: emitByte(OpCode.SUBTRACT); break;
-            case MULTIPLY: emitByte(OpCode.MULTIPLY); break;
-            case DIVIDE: emitByte(OpCode.DIVIDE); break;
-            case MODULO: emitByte(OpCode.MODULO); break;
-            case EQUALS: emitByte(OpCode.EQUAL); break;
-            case NOT_EQUALS: emitBytes(OpCode.EQUAL, OpCode.NOT); break;
-            case GREATER: emitByte(OpCode.GREATER); break;
-            case GREATER_EQUAL: emitBytes(OpCode.LESS, OpCode.NOT); break;
-            case LESS: emitByte(OpCode.LESS); break;
-            case LESS_EQUAL: emitBytes(OpCode.GREATER, OpCode.NOT); break;
+            case PLUS:
+                emitByte(OpCode.ADD);
+                break;
+            case MINUS:
+                emitByte(OpCode.SUBTRACT);
+                break;
+            case MULTIPLY:
+                emitByte(OpCode.MULTIPLY);
+                break;
+            case DIVIDE:
+                emitByte(OpCode.DIVIDE);
+                break;
+            case MODULO:
+                emitByte(OpCode.MODULO);
+                break;
+            case EQUALS:
+                emitByte(OpCode.EQUAL);
+                break;
+            case NOT_EQUALS:
+                emitBytes(OpCode.EQUAL, OpCode.NOT);
+                break;
+            case GREATER:
+                emitByte(OpCode.GREATER);
+                break;
+            case GREATER_EQUAL:
+                emitBytes(OpCode.LESS, OpCode.NOT);
+                break;
+            case LESS:
+                emitByte(OpCode.LESS);
+                break;
+            case LESS_EQUAL:
+                emitBytes(OpCode.GREATER, OpCode.NOT);
+                break;
             default:
                 throw new RuntimeException("Unknown binary operator: " + expr.operator.type);
         }
@@ -60,8 +81,12 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         compile(expr.right);
 
         switch (expr.operator.type) {
-            case MINUS: emitByte(OpCode.NEGATE); break;
-            case NOT: emitByte(OpCode.NOT); break;
+            case MINUS:
+                emitByte(OpCode.NEGATE);
+                break;
+            case NOT:
+                emitByte(OpCode.NOT);
+                break;
             default:
                 throw new RuntimeException("Unknown unary operator: " + expr.operator.type);
         }
@@ -198,7 +223,8 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         patchJump(thenJump);
         emitByte(OpCode.POP);
 
-        if (stmt.elseBranch != null) compile(stmt.elseBranch);
+        if (stmt.elseBranch != null)
+            compile(stmt.elseBranch);
         patchJump(elseJump);
         return null;
     }
@@ -287,7 +313,8 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         emitByte(OpCode.LOOP);
 
         int offset = chunk.size() - loopStart + 2;
-        if (offset > 0xffff) throw new RuntimeException("Loop body too large.");
+        if (offset > 0xffff)
+            throw new RuntimeException("Loop body too large.");
 
         emitByte((byte) ((offset >> 8) & 0xff));
         emitByte((byte) (offset & 0xff));

@@ -1,7 +1,8 @@
 import java.util.*;
 
 class Parser {
-    private static class ParseError extends RuntimeException {}
+    private static class ParseError extends RuntimeException {
+    }
 
     private final List<Token> tokens;
     private int current = 0;
@@ -13,7 +14,8 @@ class Parser {
     List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
         while (!isAtEnd()) {
-            if (match(TokenType.NEWLINE)) continue;
+            if (match(TokenType.NEWLINE))
+                continue;
             statements.add(declaration());
         }
 
@@ -26,8 +28,10 @@ class Parser {
 
     private Stmt declaration() {
         try {
-            if (match(TokenType.FUNCTION)) return function("function");
-            if (match(TokenType.LET)) return varDeclaration();
+            if (match(TokenType.FUNCTION))
+                return function("function");
+            if (match(TokenType.LET))
+                return varDeclaration();
 
             return statement();
         } catch (ParseError error) {
@@ -37,11 +41,16 @@ class Parser {
     }
 
     private Stmt statement() {
-        if (match(TokenType.IF)) return ifStatement();
-        if (match(TokenType.PRINT)) return printStatement();
-        if (match(TokenType.RETURN)) return returnStatement();
-        if (match(TokenType.WHILE)) return whileStatement();
-        if (match(TokenType.LEFT_BRACE)) return new Stmt.Block(block());
+        if (match(TokenType.IF))
+            return ifStatement();
+        if (match(TokenType.PRINT))
+            return printStatement();
+        if (match(TokenType.RETURN))
+            return returnStatement();
+        if (match(TokenType.WHILE))
+            return whileStatement();
+        if (match(TokenType.LEFT_BRACE))
+            return new Stmt.Block(block());
 
         return expressionStatement();
     }
@@ -115,7 +124,7 @@ class Parser {
                 }
 
                 parameters.add(
-                    consume(TokenType.IDENTIFIER, "Expect parameter name."));
+                        consume(TokenType.IDENTIFIER, "Expect parameter name."));
             } while (match(TokenType.COMMA));
         }
         consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
@@ -129,7 +138,8 @@ class Parser {
         List<Stmt> statements = new ArrayList<>();
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            if (match(TokenType.NEWLINE)) continue;
+            if (match(TokenType.NEWLINE))
+                continue;
             statements.add(declaration());
         }
 
@@ -145,7 +155,7 @@ class Parser {
             Expr value = assignment();
 
             if (expr instanceof Expr.Variable) {
-                Token name = ((Expr.Variable)expr).name;
+                Token name = ((Expr.Variable) expr).name;
                 return new Expr.Assign(name, value);
             }
 
@@ -267,13 +277,15 @@ class Parser {
         }
 
         Token paren = consume(TokenType.RIGHT_PAREN,
-                              "Expect ')' after arguments.");
+                "Expect ')' after arguments.");
         return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr primary() {
-        if (match(TokenType.TRUE)) return new Expr.Literal(true);
-        if (match(TokenType.FALSE)) return new Expr.Literal(false);
+        if (match(TokenType.TRUE))
+            return new Expr.Literal(true);
+        if (match(TokenType.FALSE))
+            return new Expr.Literal(false);
 
         if (match(TokenType.NUMBER, TokenType.STRING)) {
             return new Expr.Literal(previous().literal);
@@ -315,13 +327,15 @@ class Parser {
     }
 
     private Token consume(TokenType type, String message) {
-        if (check(type)) return advance();
+        if (check(type))
+            return advance();
 
         throw error(peek(), message);
     }
 
     private void consumeEndOfStatement(String message) {
-        if (match(TokenType.SEMICOLON, TokenType.NEWLINE) || isAtEnd()) return;
+        if (match(TokenType.SEMICOLON, TokenType.NEWLINE) || isAtEnd())
+            return;
         throw error(peek(), message);
     }
 
@@ -330,12 +344,14 @@ class Parser {
     }
 
     private boolean check(TokenType type) {
-        if (isAtEnd()) return false;
+        if (isAtEnd())
+            return false;
         return peek().type == type;
     }
 
     private Token advance() {
-        if (!isAtEnd()) current++;
+        if (!isAtEnd())
+            current++;
         return previous();
     }
 
@@ -360,7 +376,8 @@ class Parser {
         advance();
 
         while (!isAtEnd()) {
-            if (previous().type == TokenType.SEMICOLON) return;
+            if (previous().type == TokenType.SEMICOLON)
+                return;
 
             switch (peek().type) {
                 case FUNCTION:
@@ -370,6 +387,39 @@ class Parser {
                 case WHILE:
                 case RETURN:
                 case PRINT:
+                case NUMBER:
+                case AND:
+                case NEWLINE:
+                case EOF:
+                case RIGHT_BRACE:
+                case MULTIPLY:
+                case DOT:
+                case EQUALS:
+                case IDENTIFIER:
+                case PLUS:
+                case BOOLEAN:
+                case LESS:
+                case GREATER:
+                case LEFT_BRACKET:
+                case NOT:
+                case MODULO:
+                case STRING:
+                case ELSE:
+                case FALSE:
+                case DIVIDE:
+                case GREATER_EQUAL:
+                case NOT_EQUALS:
+                case COMMA:
+                case RIGHT_BRACKET:
+                case ASSIGN:
+                case LEFT_BRACE:
+                case LESS_EQUAL:
+                case RIGHT_PAREN:
+                case LEFT_PAREN:
+                case OR:
+                case SEMICOLON:
+                case TRUE:
+                case MINUS:
                     return;
             }
 

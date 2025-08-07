@@ -1,21 +1,19 @@
-import java.util.*;
-
 enum TokenType {
     // Literals
     NUMBER, STRING, IDENTIFIER, BOOLEAN,
-    
+
     // Keywords
     LET, IF, ELSE, WHILE, FOR, FUNCTION, RETURN, TRUE, FALSE, PRINT,
-    
+
     // Operators
     PLUS, MINUS, MULTIPLY, DIVIDE, MODULO,
     ASSIGN, EQUALS, NOT_EQUALS, LESS, GREATER, LESS_EQUAL, GREATER_EQUAL,
     AND, OR, NOT,
-    
+
     // Delimiters
     SEMICOLON, COMMA, DOT,
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE, LEFT_BRACKET, RIGHT_BRACKET,
-    
+
     // Special
     EOF, NEWLINE
 }

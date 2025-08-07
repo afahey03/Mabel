@@ -212,7 +212,8 @@ class VirtualMachine {
                 case JUMP_IF_FALSE: {
                     int offset = (Byte.toUnsignedInt(chunk.get(ip)) << 8) | Byte.toUnsignedInt(chunk.get(ip + 1));
                     ip += 2;
-                    if (!isTruthy(peek())) ip += offset;
+                    if (!isTruthy(peek()))
+                        ip += offset;
                     break;
                 }
 
@@ -224,37 +225,40 @@ class VirtualMachine {
 
                 case CALL: {
                     int argCount = Byte.toUnsignedInt(chunk.get(ip++));
-                    
+
                     // The function should be on top of the stack, arguments below it
                     Object callee = peek(0); // Function is at the top
-                    
+
                     // Debug only for problematic calls
                     if (!(callee instanceof MabelBuiltin)) {
-                        System.out.println("DEBUG: CALL error - argCount=" + argCount + ", callee=" + callee + " (" + callee.getClass().getSimpleName() + ")");
+                        System.out.println("DEBUG: CALL error - argCount=" + argCount + ", callee=" + callee + " ("
+                                + callee.getClass().getSimpleName() + ")");
                         System.out.println("DEBUG: Stack top 3 items:");
                         for (int i = 0; i < Math.min(3, stack.size()); i++) {
-                            System.out.println("  [" + i + "] " + peek(i) + " (" + peek(i).getClass().getSimpleName() + ")");
+                            System.out.println(
+                                    "  [" + i + "] " + peek(i) + " (" + peek(i).getClass().getSimpleName() + ")");
                         }
                     }
-                    
+
                     if (callee instanceof MabelBuiltin) {
                         MabelBuiltin builtin = (MabelBuiltin) callee;
                         if (argCount != builtin.arity()) {
-                            throw new RuntimeException("Expected " + builtin.arity() + " arguments but got " + argCount + ".");
+                            throw new RuntimeException(
+                                    "Expected " + builtin.arity() + " arguments but got " + argCount + ".");
                         }
-                        
+
                         pop(); // Pop the function first
-                        
+
                         List<Object> args = new ArrayList<>();
                         for (int i = 0; i < argCount; i++) {
                             args.add(0, pop()); // Pop arguments in reverse order
                         }
-                        
+
                         Object result = builtin.call(args);
                         push(result);
                     } else {
-                        throw new RuntimeException("Can only call functions and classes. Got: " + 
-                            (callee == null ? "null" : callee.getClass().getSimpleName()));
+                        throw new RuntimeException("Can only call functions and classes. Got: " +
+                                (callee == null ? "null" : callee.getClass().getSimpleName()));
                     }
                     break;
                 }
@@ -272,7 +276,7 @@ class VirtualMachine {
                 case INDEX_GET: {
                     Object index = pop();
                     Object object = pop();
-                    
+
                     if (object instanceof List && index instanceof Double) {
                         List<?> list = (List<?>) object;
                         int i = ((Double) index).intValue();
@@ -302,26 +306,6 @@ class VirtualMachine {
         }
     }
 
-    private void callValue(Object callee, int argCount) {
-        if (callee instanceof MabelBuiltin) {
-            MabelBuiltin builtin = (MabelBuiltin) callee;
-            if (argCount != builtin.arity()) {
-                throw new RuntimeException("Expected " + builtin.arity() + " arguments but got " + argCount + ".");
-            }
-            
-            List<Object> args = new ArrayList<>();
-            for (int i = 0; i < argCount; i++) {
-                args.add(0, pop());
-            }
-            pop(); // Pop the function itself
-            
-            Object result = builtin.call(args);
-            push(result);
-        } else {
-            throw new RuntimeException("Can only call functions and classes.");
-        }
-    }
-
     private void push(Object value) {
         stack.add(value);
     }
@@ -342,19 +326,24 @@ class VirtualMachine {
     }
 
     private boolean isTruthy(Object object) {
-        if (object == null) return false;
-        if (object instanceof Boolean) return (Boolean) object;
+        if (object == null)
+            return false;
+        if (object instanceof Boolean)
+            return (Boolean) object;
         return true;
     }
 
     private boolean isEqual(Object a, Object b) {
-        if (a == null && b == null) return true;
-        if (a == null) return false;
+        if (a == null && b == null)
+            return true;
+        if (a == null)
+            return false;
         return a.equals(b);
     }
 
     private String stringify(Object object) {
-        if (object == null) return "nil";
+        if (object == null)
+            return "nil";
         if (object instanceof Double) {
             String text = object.toString();
             if (text.endsWith(".0")) {
@@ -367,7 +356,8 @@ class VirtualMachine {
             StringBuilder sb = new StringBuilder();
             sb.append("[");
             for (int i = 0; i < list.size(); i++) {
-                if (i > 0) sb.append(", ");
+                if (i > 0)
+                    sb.append(", ");
                 sb.append(stringify(list.get(i)));
             }
             sb.append("]");
