@@ -72,4 +72,8 @@ class Chunk {
     public void set(int offset, byte value) {
         code.set(offset, value);
     }
+
+    public List<Object> getConstants() {
+        return new ArrayList<>(constants);
+    }
 }
