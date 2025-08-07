@@ -9,5 +9,7 @@ java MabelCompiler
 
 # Compile to bytecode then run
 java MabelCompiler program.mabel  # Creates program.mbc and program.jar
+
 java MabelCompiler program.mbc    # Runs bytecode
+
 java -jar program.jar             # Also runs bytecode
