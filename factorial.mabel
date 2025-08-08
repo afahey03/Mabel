@@ -7,6 +7,6 @@ function factorial(n) {
     return n * factorial(n - 1)
 }
 
-print "Testing factorial(5):"
+print "Running factorial(5):"
 let result = factorial(5)
 print "Result: " + str(result)
