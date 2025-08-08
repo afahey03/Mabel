@@ -22,7 +22,11 @@ class SerializableFunction implements MabelCallable, Serializable {
 
   @Override
   public Object call(VirtualMachine vm, List<Object> arguments) {
-    if (callDepth >= 100) { // Change to whatever
+    return callAsMethod(null, vm, arguments);
+  }
+
+  public Object callAsMethod(SerializableInstance instance, VirtualMachine vm, List<Object> arguments) {
+    if (callDepth >= 100) {
       throw new RuntimeException("Stack overflow: recursion depth exceeded 100");
     }
 
@@ -36,12 +40,16 @@ class SerializableFunction implements MabelCallable, Serializable {
       Map<String, Object> vmGlobals = vm.getGlobals();
       for (String key : vmGlobals.keySet()) {
         Object value = vmGlobals.get(key);
-        if (value instanceof MabelBuiltin) {
+        if (value instanceof MabelBuiltin || value instanceof SerializableClass) {
           globalEnv.define(key, value);
         }
       }
 
       Environment environment = new Environment(globalEnv);
+
+      if (instance != null) {
+        environment.define("this", instance);
+      }
 
       for (int i = 0; i < paramNames.size() && i < arguments.size(); i++) {
         // System.out.println("DEBUG: [depth=" + callDepth + "] Binding " +
@@ -49,32 +57,32 @@ class SerializableFunction implements MabelCallable, Serializable {
         environment.define(paramNames.get(i), arguments.get(i));
       }
 
-      Object result = null;
-      for (int i = 0; i < body.size(); i++) {
-        SerializableStatement stmt = body.get(i);
-        if (stmt != null) {
-          // System.out.println("DEBUG: [depth=" + callDepth + "] Executing statement " +
-          // i + ": " + stmt.type);
-          result = executeSerializableStatement(stmt, environment, vm);
-        } else {
-          // System.out.println("WARNING: [depth=" + callDepth + "] Skipping null
-          // statement " + i);
+      try {
+        Object result = null;
+        for (int i = 0; i < body.size(); i++) {
+          SerializableStatement stmt = body.get(i);
+          if (stmt != null) {
+            // System.out.println("DEBUG: [depth=" + callDepth + "] Executing statement " +
+            // i + ": " + stmt.type);
+            result = executeSerializableStatement(stmt, environment, vm);
+          } else {
+            // System.out.println("WARNING: [depth=" + callDepth + "] Skipping null
+            // statement " + i);
+          }
         }
+        /*
+         * System.out
+         * .println("DEBUG: [depth=" + callDepth + "] Function " + name +
+         * " completed normally, returning: " + result);
+         */
+        callDepth--;
+        return result;
+      } catch (ReturnValue returnValue) {
+        // System.out.println("DEBUG: [depth=" + callDepth + "] Function " + name + "
+        // returned: " + returnValue.value);
+        callDepth--;
+        return returnValue.value;
       }
-
-      /*
-       * System.out
-       * .println("DEBUG: [depth=" + callDepth + "] Function " + name +
-       * " completed normally, returning: " + result);
-       */
-      callDepth--;
-      return result;
-
-    } catch (ReturnValue returnValue) {
-      // System.out.println("DEBUG: [depth=" + callDepth + "] Function " + name + "
-      // returned: " + returnValue.value);
-      callDepth--;
-      return returnValue.value;
     } catch (Exception e) {
       callDepth--;
       throw e;
@@ -133,11 +141,19 @@ class SerializableFunction implements MabelCallable, Serializable {
         }
         return null;
 
+      case "while":
+        while (isTruthy(evaluateSerializableExpression(stmt.condition, env, vm))) {
+          if (stmt.body != null) {
+            executeSerializableStatement(stmt.body, env, vm);
+          }
+        }
+        return null;
+
       case "block":
         Object result = null;
         if (stmt.statements != null) {
           for (SerializableStatement blockStmt : stmt.statements) {
-            if (blockStmt != null) { // Add null check
+            if (blockStmt != null) {
               result = executeSerializableStatement(blockStmt, env, vm);
             } else {
               System.out.println("WARNING: Skipping null statement in block");
@@ -242,8 +258,71 @@ class SerializableFunction implements MabelCallable, Serializable {
           return ((MabelCallable) callee).call(vm, args);
         } else if (callee instanceof MabelBuiltin) {
           return ((MabelBuiltin) callee).call(args);
+        } else if (callee instanceof SerializableInstance.BoundMethod) {
+          return ((SerializableInstance.BoundMethod) callee).call(vm, args);
         }
-        break;
+        throw new RuntimeException("Can only call functions and methods.");
+
+      case "get":
+        Object object = evaluateSerializableExpression(expr.object, env, vm);
+        if (object instanceof SerializableInstance) {
+          return ((SerializableInstance) object).get(expr.name);
+        }
+        throw new RuntimeException("Only instances have properties.");
+
+      case "set":
+        Object obj = evaluateSerializableExpression(expr.object, env, vm);
+        Object val = evaluateSerializableExpression(expr.right, env, vm);
+        if (obj instanceof SerializableInstance) {
+          ((SerializableInstance) obj).set(expr.name, val);
+          return val;
+        }
+        throw new RuntimeException("Only instances have fields.");
+
+      case "this":
+        try {
+          return env.get("this");
+        } catch (RuntimeException e) {
+          throw new RuntimeException("Cannot use 'this' outside a class.");
+        }
+
+      case "assign":
+        Object assignValue = evaluateSerializableExpression(expr.right, env, vm);
+        try {
+          env.assign(new Token(TokenType.IDENTIFIER, expr.name, null, 0), assignValue);
+        } catch (RuntimeException e) {
+          vm.getGlobals().put(expr.name, assignValue);
+        }
+        return assignValue;
+
+      case "array":
+        List<Object> elements = new ArrayList<>();
+        if (expr.elements != null) {
+          for (SerializableExpression element : expr.elements) {
+            elements.add(evaluateSerializableExpression(element, env, vm));
+          }
+        }
+        return elements;
+
+      case "index":
+        Object array = evaluateSerializableExpression(expr.object, env, vm);
+        Object index = evaluateSerializableExpression(expr.right, env, vm);
+        if (array instanceof List && index instanceof Double) {
+          List<?> list = (List<?>) array;
+          int i = ((Double) index).intValue();
+          if (i < 0 || i >= list.size()) {
+            throw new RuntimeException("Array index out of bounds.");
+          }
+          return list.get(i);
+        } else if (array instanceof String && index instanceof Double) {
+          String str = (String) array;
+          int i = ((Double) index).intValue();
+          if (i < 0 || i >= str.length()) {
+            throw new RuntimeException("String index out of bounds.");
+          }
+          return String.valueOf(str.charAt(i));
+        }
+        throw new RuntimeException("Invalid index operation.");
     }
 
     return null;

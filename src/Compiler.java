@@ -278,25 +278,53 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
-        int constant = makeConstant(stmt.name.lexeme);
-        emitBytes(OpCode.CLASS, (byte) constant);
-        emitBytes(OpCode.DEFINE_GLOBAL, (byte) constant);
+        System.out.println("DEBUG: Compiling class: " + stmt.name.lexeme);
 
-        if (stmt.superclass != null) {
-            compile(stmt.superclass);
-            emitByte(OpCode.INHERIT);
-        }
+        // Extract field declarations from the class methods
+        Map<String, Object> defaultFieldValues = new HashMap<>();
+        Map<String, SerializableFunction> methods = new HashMap<>();
 
+        // Process each method in the class
         for (Stmt.Function method : stmt.methods) {
-            int methodConstant = makeConstant(method.name.lexeme);
-            emitBytes(OpCode.METHOD, (byte) methodConstant);
+            List<String> paramNames = new ArrayList<>();
+            for (Token param : method.params) {
+                paramNames.add(param.lexeme);
+            }
 
+            List<SerializableStatement> serializableBody = new ArrayList<>();
             for (Stmt bodyStmt : method.body) {
-                if (bodyStmt != null) {
-                    compile(bodyStmt);
+                SerializableStatement serializable = convertStatement(bodyStmt);
+                if (serializable != null) {
+                    serializableBody.add(serializable);
                 }
             }
+
+            SerializableFunction function = new SerializableFunction(
+                    method.name.lexeme,
+                    paramNames,
+                    serializableBody);
+
+            methods.put(method.name.lexeme, function);
         }
+
+        // Handle superclass if present
+        SerializableClass superclass = null;
+        if (stmt.superclass != null) {
+            // This would need to be resolved from the globals
+            // For now, we'll leave it as null
+        }
+
+        // Create the class
+        SerializableClass klass = new SerializableClass(
+                stmt.name.lexeme,
+                superclass,
+                methods,
+                defaultFieldValues);
+
+        // Store the class as a constant and define it globally
+        int constant = makeConstant(stmt.name.lexeme);
+        emitConstant(klass);
+        emitBytes(OpCode.DEFINE_GLOBAL, (byte) constant);
 
         return null;
     }
@@ -347,24 +375,8 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             return SerializableStatement.expression(convertExpression(exprStmt.expression));
         } else if (stmt instanceof Stmt.If) {
             Stmt.If ifStmt = (Stmt.If) stmt;
-            /*
-             * System.out.println("DEBUG: Converting If statement");
-             * System.out.println("DEBUG: - thenBranch type: "
-             * + (ifStmt.thenBranch != null ? ifStmt.thenBranch.getClass().getSimpleName() :
-             * "null"));
-             * System.out.println("DEBUG: - elseBranch type: "
-             * + (ifStmt.elseBranch != null ? ifStmt.elseBranch.getClass().getSimpleName() :
-             * "null"));
-             */
-
             SerializableStatement thenBranch = convertStatement(ifStmt.thenBranch);
             SerializableStatement elseBranch = ifStmt.elseBranch != null ? convertStatement(ifStmt.elseBranch) : null;
-
-            // System.out.println("DEBUG: - converted thenBranch: " + (thenBranch != null ?
-            // thenBranch.type : "null"));
-            // System.out.println("DEBUG: - converted elseBranch: " + (elseBranch != null ?
-            // elseBranch.type : "null"));
-
             return SerializableStatement.ifStmt(
                     convertExpression(ifStmt.condition),
                     thenBranch,
@@ -379,6 +391,11 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 }
             }
             return SerializableStatement.block(statements);
+        } else if (stmt instanceof Stmt.While) {
+            Stmt.While whileStmt = (Stmt.While) stmt;
+            return SerializableStatement.whileStmt(
+                    convertExpression(whileStmt.condition),
+                    convertStatement(whileStmt.body));
         }
 
         return null;
@@ -402,6 +419,36 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 args.add(convertExpression(arg));
             }
             return SerializableExpression.call(convertExpression(callExpr.callee), args);
+        } else if (expr instanceof Expr.Get) {
+            Expr.Get getExpr = (Expr.Get) expr;
+            return SerializableExpression.get(
+                    convertExpression(getExpr.object),
+                    getExpr.name.lexeme);
+        } else if (expr instanceof Expr.Set) {
+            Expr.Set setExpr = (Expr.Set) expr;
+            return SerializableExpression.set(
+                    convertExpression(setExpr.object),
+                    setExpr.name.lexeme,
+                    convertExpression(setExpr.value));
+        } else if (expr instanceof Expr.This) {
+            return SerializableExpression.thisExpr();
+        } else if (expr instanceof Expr.Assign) {
+            Expr.Assign assignExpr = (Expr.Assign) expr;
+            return SerializableExpression.assign(
+                    assignExpr.name.lexeme,
+                    convertExpression(assignExpr.value));
+        } else if (expr instanceof Expr.Array) {
+            Expr.Array arrayExpr = (Expr.Array) expr;
+            List<SerializableExpression> elements = new ArrayList<>();
+            for (Expr element : arrayExpr.elements) {
+                elements.add(convertExpression(element));
+            }
+            return SerializableExpression.array(elements);
+        } else if (expr instanceof Expr.Index) {
+            Expr.Index indexExpr = (Expr.Index) expr;
+            return SerializableExpression.index(
+                    convertExpression(indexExpr.object),
+                    convertExpression(indexExpr.index));
         }
 
         return SerializableExpression.literal(null);

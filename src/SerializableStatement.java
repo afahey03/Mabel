@@ -11,6 +11,7 @@ class SerializableStatement implements Serializable {
   SerializableExpression condition;
   SerializableStatement thenBranch;
   SerializableStatement elseBranch;
+  SerializableStatement body; // For while loops
   List<SerializableStatement> statements;
 
   SerializableStatement(String type) {
@@ -48,6 +49,13 @@ class SerializableStatement implements Serializable {
     stmt.condition = condition;
     stmt.thenBranch = thenBranch;
     stmt.elseBranch = elseBranch;
+    return stmt;
+  }
+
+  static SerializableStatement whileStmt(SerializableExpression condition, SerializableStatement body) {
+    SerializableStatement stmt = new SerializableStatement("while");
+    stmt.condition = condition;
+    stmt.body = body;
     return stmt;
   }
 

@@ -233,12 +233,6 @@ class VirtualMachine {
                     int argCount = Byte.toUnsignedInt(chunk.get(ip++));
                     Object callee = peek(0);
 
-                    // DEBUG OUTPUT
-                    // System.out.println("DEBUG: CALL - argCount=" + argCount + ", callee=" +
-                    // callee +
-                    // " (type: " + (callee == null ? "null" : callee.getClass().getSimpleName()) +
-                    // ")");
-
                     if (callee instanceof MabelBuiltin) {
                         MabelBuiltin builtin = (MabelBuiltin) callee;
                         if (argCount != builtin.arity()) {
@@ -265,16 +259,33 @@ class VirtualMachine {
                         }
                         Object result = callable.call(this, args);
                         push(result);
+                    } else if (callee instanceof SerializableClass) {
+                        SerializableClass klass = (SerializableClass) callee;
+                        if (argCount != klass.arity()) {
+                            throw new RuntimeException(
+                                    "Expected " + klass.arity() + " arguments but got " + argCount + ".");
+                        }
+                        pop();
+                        List<Object> args = new ArrayList<>();
+                        for (int i = 0; i < argCount; i++) {
+                            args.add(0, pop());
+                        }
+                        Object result = klass.call(this, args);
+                        push(result);
+                    } else if (callee instanceof SerializableInstance.BoundMethod) {
+                        SerializableInstance.BoundMethod method = (SerializableInstance.BoundMethod) callee;
+                        if (argCount != method.arity()) {
+                            throw new RuntimeException(
+                                    "Expected " + method.arity() + " arguments but got " + argCount + ".");
+                        }
+                        pop();
+                        List<Object> args = new ArrayList<>();
+                        for (int i = 0; i < argCount; i++) {
+                            args.add(0, pop());
+                        }
+                        Object result = method.call(this, args);
+                        push(result);
                     } else {
-                        // STACK DEBUG
-                        /*
-                         * System.out.println("DEBUG: Stack contents:");
-                         * for (int i = 0; i < Math.min(5, stack.size()); i++) {
-                         * System.out.println(
-                         * "  [" + i + "] " + peek(i) + " (" + peek(i).getClass().getSimpleName() +
-                         * ")");
-                         * }
-                         */
                         throw new RuntimeException("Can only call functions and classes. Got: " +
                                 (callee == null ? "null" : callee.getClass().getSimpleName()));
                     }
@@ -330,6 +341,14 @@ class VirtualMachine {
                         } catch (RuntimeException e) {
                             throw new RuntimeException("Undefined property '" + name + "'.");
                         }
+                    } else if (object instanceof SerializableInstance) {
+                        SerializableInstance instance = (SerializableInstance) object;
+                        try {
+                            Object value = instance.get(name);
+                            push(value);
+                        } catch (RuntimeException e) {
+                            throw new RuntimeException("Undefined property '" + name + "'.");
+                        }
                     } else {
                         throw new RuntimeException("Only instances have properties.");
                     }
@@ -344,6 +363,10 @@ class VirtualMachine {
                     if (object instanceof MabelInstance) {
                         MabelInstance instance = (MabelInstance) object;
                         instance.set(new Token(TokenType.IDENTIFIER, name, null, 0), value);
+                        push(value);
+                    } else if (object instanceof SerializableInstance) {
+                        SerializableInstance instance = (SerializableInstance) object;
+                        instance.set(name, value);
                         push(value);
                     } else {
                         throw new RuntimeException("Only instances have fields.");
@@ -373,6 +396,7 @@ class VirtualMachine {
                     throw new RuntimeException("Unknown opcode: " + op);
             }
         }
+
     }
 
     private void push(Object value) {
