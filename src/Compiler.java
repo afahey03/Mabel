@@ -2,14 +2,11 @@ import java.util.*;
 
 class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Chunk chunk = new Chunk();
-    private VirtualMachine vm;
 
     public Compiler() {
-        this.vm = null;
     }
 
     public Compiler(VirtualMachine vm) {
-        this.vm = vm;
     }
 
     public Chunk compile(List<Stmt> statements) {

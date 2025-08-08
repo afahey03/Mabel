@@ -9,3 +9,6 @@
 
 # Ignore Java archive files
 *.jar
+
+# Ignore bat files
+*.bat
