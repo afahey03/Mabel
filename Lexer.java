@@ -6,9 +6,9 @@ class Lexer {
     private int start = 0;
     private int current = 0;
     private int line = 1;
-    
+
     private static final Map<String, TokenType> keywords;
-    
+
     static {
         keywords = new HashMap<>();
         keywords.put("let", TokenType.LET);
@@ -24,6 +24,15 @@ class Lexer {
         keywords.put("or", TokenType.OR);
         keywords.put("not", TokenType.NOT);
         keywords.put("print", TokenType.PRINT);
+        keywords.put("class", TokenType.CLASS);
+        keywords.put("this", TokenType.THIS);
+        keywords.put("super", TokenType.SUPER);
+        keywords.put("new", TokenType.NEW);
+        keywords.put("int", TokenType.INT);
+        keywords.put("double", TokenType.DOUBLE);
+        keywords.put("string", TokenType.STRING_TYPE);
+        keywords.put("bool", TokenType.BOOL);
+        keywords.put("void", TokenType.VOID);
     }
 
     Lexer(String source) {
@@ -84,6 +93,9 @@ class Lexer {
             case ';':
                 addToken(TokenType.SEMICOLON);
                 break;
+            case ':':
+                addToken(TokenType.COLON);
+                break;
             case '*':
                 addToken(TokenType.MULTIPLY);
                 break;
@@ -104,7 +116,8 @@ class Lexer {
                 break;
             case '/':
                 if (match('/')) {
-                    while (peek() != '\n' && !isAtEnd()) advance();
+                    while (peek() != '\n' && !isAtEnd())
+                        advance();
                 } else {
                     addToken(TokenType.DIVIDE);
                 }
@@ -125,20 +138,24 @@ class Lexer {
     }
 
     private void identifier() {
-        while (isAlphaNumeric(peek())) advance();
+        while (isAlphaNumeric(peek()))
+            advance();
 
         String text = source.substring(start, current);
         TokenType type = keywords.get(text);
-        if (type == null) type = TokenType.IDENTIFIER;
+        if (type == null)
+            type = TokenType.IDENTIFIER;
         addToken(type);
     }
 
     private void number() {
-        while (isDigit(peek())) advance();
+        while (isDigit(peek()))
+            advance();
 
         if (peek() == '.' && isDigit(peekNext())) {
             advance();
-            while (isDigit(peek())) advance();
+            while (isDigit(peek()))
+                advance();
         }
 
         addToken(TokenType.NUMBER, Double.parseDouble(source.substring(start, current)));
@@ -146,7 +163,8 @@ class Lexer {
 
     private void string() {
         while (peek() != '"' && !isAtEnd()) {
-            if (peek() == '\n') line++;
+            if (peek() == '\n')
+                line++;
             advance();
         }
 
@@ -162,26 +180,30 @@ class Lexer {
     }
 
     private boolean match(char expected) {
-        if (isAtEnd()) return false;
-        if (source.charAt(current) != expected) return false;
+        if (isAtEnd())
+            return false;
+        if (source.charAt(current) != expected)
+            return false;
 
         current++;
         return true;
     }
 
     private char peek() {
-        if (isAtEnd()) return '\0';
+        if (isAtEnd())
+            return '\0';
         return source.charAt(current);
     }
 
     private char peekNext() {
-        if (current + 1 >= source.length()) return '\0';
+        if (current + 1 >= source.length())
+            return '\0';
         return source.charAt(current + 1);
     }
 
     private boolean isAlpha(char c) {
         return (c >= 'a' && c <= 'z') ||
-               (c >= 'A' && c <= 'Z') ||
+                (c >= 'A' && c <= 'Z') ||
                 c == '_';
     }
 

@@ -4,6 +4,10 @@ enum TokenType {
 
     // Keywords
     LET, IF, ELSE, WHILE, FOR, FUNCTION, RETURN, TRUE, FALSE, PRINT,
+    CLASS, THIS, SUPER, NEW,
+
+    // Types
+    INT, DOUBLE, STRING_TYPE, BOOL, VOID,
 
     // Operators
     PLUS, MINUS, MULTIPLY, DIVIDE, MODULO,
@@ -11,7 +15,7 @@ enum TokenType {
     AND, OR, NOT,
 
     // Delimiters
-    SEMICOLON, COMMA, DOT,
+    SEMICOLON, COMMA, DOT, COLON,
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE, LEFT_BRACKET, RIGHT_BRACKET,
 
     // Special

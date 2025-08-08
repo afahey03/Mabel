@@ -1,0 +1,4 @@
+echo function test() {
+    print "Function works!"
+}
+test() > simple_func.mabel

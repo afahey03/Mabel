@@ -28,6 +28,8 @@ class Parser {
 
     private Stmt declaration() {
         try {
+            if (match(TokenType.CLASS))
+                return classDeclaration();
             if (match(TokenType.FUNCTION))
                 return function("function");
             if (match(TokenType.LET))
@@ -38,6 +40,28 @@ class Parser {
             synchronize();
             return null;
         }
+    }
+
+    private Stmt classDeclaration() {
+        Token name = consume(TokenType.IDENTIFIER, "Expect class name.");
+
+        Expr.Variable superclass = null;
+        if (match(TokenType.LESS)) {
+            consume(TokenType.IDENTIFIER, "Expect superclass name.");
+            superclass = new Expr.Variable(previous());
+        }
+
+        consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            if (match(TokenType.NEWLINE))
+                continue;
+            methods.add(function("method"));
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+        return new Stmt.Class(name, superclass, methods);
     }
 
     private Stmt statement() {
@@ -117,21 +141,34 @@ class Parser {
         Token name = consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
         consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
         List<Token> parameters = new ArrayList<>();
+        List<Token> paramTypes = new ArrayList<>();
+
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
                 if (parameters.size() >= 255) {
                     error(peek(), "Can't have more than 255 parameters.");
                 }
 
-                parameters.add(
-                        consume(TokenType.IDENTIFIER, "Expect parameter name."));
+                Token param = consume(TokenType.IDENTIFIER, "Expect parameter name.");
+                parameters.add(param);
+
+                Token paramType = null;
+                if (match(TokenType.COLON)) {
+                    paramType = consume(TokenType.IDENTIFIER, "Expect parameter type.");
+                }
+                paramTypes.add(paramType);
             } while (match(TokenType.COMMA));
         }
         consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
 
+        Token returnType = null;
+        if (match(TokenType.COLON)) {
+            returnType = consume(TokenType.IDENTIFIER, "Expect return type.");
+        }
+
         consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
         List<Stmt> body = block();
-        return new Stmt.Function(name, parameters, body);
+        return new Stmt.Function(name, parameters, paramTypes, returnType, body);
     }
 
     private List<Stmt> block() {
@@ -420,6 +457,16 @@ class Parser {
                 case SEMICOLON:
                 case TRUE:
                 case MINUS:
+                case CLASS:
+                case DOUBLE:
+                case BOOL:
+                case THIS:
+                case VOID:
+                case SUPER:
+                case STRING_TYPE:
+                case COLON:
+                case NEW:
+                case INT:
                     return;
             }
 

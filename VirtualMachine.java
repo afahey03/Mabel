@@ -58,6 +58,8 @@ class VirtualMachine {
             switch (op) {
                 case CONSTANT:
                     Object constant = chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
+                    System.out.println("DEBUG: Loading constant: " + constant + " (type: " +
+                            (constant == null ? "null" : constant.getClass().getSimpleName()) + ")");
                     push(constant);
                     break;
 
@@ -89,7 +91,10 @@ class VirtualMachine {
 
                 case DEFINE_GLOBAL: {
                     String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
-                    globals.put(name, peek());
+                    Object value = peek();
+                    System.out.println("DEBUG: Defining global '" + name + "' = " + value +
+                            " (type: " + (value == null ? "null" : value.getClass().getSimpleName()) + ")");
+                    globals.put(name, value);
                     pop();
                     break;
                 }
@@ -225,20 +230,11 @@ class VirtualMachine {
 
                 case CALL: {
                     int argCount = Byte.toUnsignedInt(chunk.get(ip++));
+                    Object callee = peek(0);
 
-                    // The function should be on top of the stack, arguments below it
-                    Object callee = peek(0); // Function is at the top
-
-                    // Debug only for problematic calls
-                    if (!(callee instanceof MabelBuiltin)) {
-                        System.out.println("DEBUG: CALL error - argCount=" + argCount + ", callee=" + callee + " ("
-                                + callee.getClass().getSimpleName() + ")");
-                        System.out.println("DEBUG: Stack top 3 items:");
-                        for (int i = 0; i < Math.min(3, stack.size()); i++) {
-                            System.out.println(
-                                    "  [" + i + "] " + peek(i) + " (" + peek(i).getClass().getSimpleName() + ")");
-                        }
-                    }
+                    // DEBUG OUTPUT
+                    System.out.println("DEBUG: CALL - argCount=" + argCount + ", callee=" + callee +
+                            " (type: " + (callee == null ? "null" : callee.getClass().getSimpleName()) + ")");
 
                     if (callee instanceof MabelBuiltin) {
                         MabelBuiltin builtin = (MabelBuiltin) callee;
@@ -246,17 +242,33 @@ class VirtualMachine {
                             throw new RuntimeException(
                                     "Expected " + builtin.arity() + " arguments but got " + argCount + ".");
                         }
-
-                        pop(); // Pop the function first
-
+                        pop();
                         List<Object> args = new ArrayList<>();
                         for (int i = 0; i < argCount; i++) {
-                            args.add(0, pop()); // Pop arguments in reverse order
+                            args.add(0, pop());
                         }
-
                         Object result = builtin.call(args);
                         push(result);
+                    } else if (callee instanceof MabelCallable) {
+                        MabelCallable callable = (MabelCallable) callee;
+                        if (argCount != callable.arity()) {
+                            throw new RuntimeException(
+                                    "Expected " + callable.arity() + " arguments but got " + argCount + ".");
+                        }
+                        pop();
+                        List<Object> args = new ArrayList<>();
+                        for (int i = 0; i < argCount; i++) {
+                            args.add(0, pop());
+                        }
+                        Object result = callable.call(this, args);
+                        push(result);
                     } else {
+                        // STACK DEBUG
+                        System.out.println("DEBUG: Stack contents:");
+                        for (int i = 0; i < Math.min(5, stack.size()); i++) {
+                            System.out.println(
+                                    "  [" + i + "] " + peek(i) + " (" + peek(i).getClass().getSimpleName() + ")");
+                        }
                         throw new RuntimeException("Can only call functions and classes. Got: " +
                                 (callee == null ? "null" : callee.getClass().getSimpleName()));
                     }
@@ -267,7 +279,7 @@ class VirtualMachine {
                     int elementCount = Byte.toUnsignedInt(chunk.get(ip++));
                     List<Object> array = new ArrayList<>();
                     for (int i = 0; i < elementCount; i++) {
-                        array.add(0, pop()); // Reverse order
+                        array.add(0, pop());
                     }
                     push(array);
                     break;
@@ -299,6 +311,57 @@ class VirtualMachine {
 
                 case RETURN:
                     return;
+
+                case GET_PROPERTY: {
+                    Object object = pop();
+                    String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
+
+                    if (object instanceof MabelInstance) {
+                        MabelInstance instance = (MabelInstance) object;
+                        try {
+                            Object value = instance.get(new Token(TokenType.IDENTIFIER, name, null, 0));
+                            push(value);
+                        } catch (RuntimeException e) {
+                            throw new RuntimeException("Undefined property '" + name + "'.");
+                        }
+                    } else {
+                        throw new RuntimeException("Only instances have properties.");
+                    }
+                    break;
+                }
+
+                case SET_PROPERTY: {
+                    Object object = pop();
+                    String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
+                    Object value = pop();
+
+                    if (object instanceof MabelInstance) {
+                        MabelInstance instance = (MabelInstance) object;
+                        instance.set(new Token(TokenType.IDENTIFIER, name, null, 0), value);
+                        push(value);
+                    } else {
+                        throw new RuntimeException("Only instances have fields.");
+                    }
+                    break;
+                }
+
+                case CLASS: {
+                    String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
+                    MabelClass klass = new MabelClass(name, null, new HashMap<>());
+                    push(klass);
+                    break;
+                }
+
+                case METHOD: {
+                    String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
+                    break;
+                }
+
+                case CLOSURE: {
+                    String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
+                    push(new MabelFunction(null, null, false));
+                    break;
+                }
 
                 default:
                     throw new RuntimeException("Unknown opcode: " + op);
@@ -364,5 +427,94 @@ class VirtualMachine {
             return sb.toString();
         }
         return object.toString();
+    }
+
+    public void executeBlock(List<Stmt> statements, Environment environment) {
+        for (Stmt statement : statements) {
+            if (statement != null) {
+                executeStatement(statement, environment);
+            }
+        }
+    }
+
+    public Map<String, Object> getGlobals() {
+        return globals;
+    }
+
+    private void executeStatement(Stmt statement, Environment environment) {
+        try {
+            System.out.println("DEBUG: Executing statement: " + statement.getClass().getSimpleName());
+            if (statement instanceof Stmt.Print) {
+                Stmt.Print printStmt = (Stmt.Print) statement;
+                Object value = evaluateExpression(printStmt.expression, environment);
+                System.out.println(stringify(value));
+            } else if (statement instanceof Stmt.Expression) {
+                Stmt.Expression exprStmt = (Stmt.Expression) statement;
+                evaluateExpression(exprStmt.expression, environment);
+            } else if (statement instanceof Stmt.Var) {
+                Stmt.Var varStmt = (Stmt.Var) statement;
+                Object value = null;
+                if (varStmt.initializer != null) {
+                    value = evaluateExpression(varStmt.initializer, environment);
+                }
+                environment.define(varStmt.name.lexeme, value);
+            } else if (statement instanceof Stmt.Return) {
+                Stmt.Return returnStmt = (Stmt.Return) statement;
+                Object value = null;
+                if (returnStmt.value != null) {
+                    value = evaluateExpression(returnStmt.value, environment);
+                }
+                throw new ReturnValue(value);
+            }
+        } catch (RuntimeException e) {
+            System.err.println("Error executing statement: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private Object evaluateExpression(Expr expression, Environment environment) {
+        if (expression instanceof Expr.Literal) {
+            return ((Expr.Literal) expression).value;
+        } else if (expression instanceof Expr.Variable) {
+            Expr.Variable varExpr = (Expr.Variable) expression;
+            return environment.get(varExpr.name);
+        } else if (expression instanceof Expr.Binary) {
+            Expr.Binary binExpr = (Expr.Binary) expression;
+            Object left = evaluateExpression(binExpr.left, environment);
+            Object right = evaluateExpression(binExpr.right, environment);
+
+            switch (binExpr.operator.type) {
+                case PLUS:
+                    if (left instanceof Double && right instanceof Double) {
+                        return (Double) left + (Double) right;
+                    } else if (left instanceof String || right instanceof String) {
+                        return stringify(left) + stringify(right);
+                    }
+                    break;
+                case MINUS:
+                    if (left instanceof Double && right instanceof Double) {
+                        return (Double) left - (Double) right;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } else if (expression instanceof Expr.Call) {
+            Expr.Call callExpr = (Expr.Call) expression;
+            Object callee = evaluateExpression(callExpr.callee, environment);
+
+            List<Object> arguments = new ArrayList<>();
+            for (Expr arg : callExpr.arguments) {
+                arguments.add(evaluateExpression(arg, environment));
+            }
+
+            if (callee instanceof MabelCallable) {
+                return ((MabelCallable) callee).call(this, arguments);
+            } else if (callee instanceof MabelBuiltin) {
+                return ((MabelBuiltin) callee).call(arguments);
+            }
+        }
+
+        return null;
     }
 }

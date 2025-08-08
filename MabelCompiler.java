@@ -1,6 +1,7 @@
 import java.io.*;
 import java.nio.file.*;
 import java.util.List;
+import java.util.Map;
 
 public class MabelCompiler {
     private static boolean hadError = false;
@@ -30,7 +31,6 @@ public class MabelCompiler {
             System.out.println("Use: java -jar " + path);
             return;
         } else {
-            // Run as source
             run(source);
         }
 
@@ -67,7 +67,8 @@ public class MabelCompiler {
         if (hadError)
             return;
 
-        Compiler compiler = new Compiler();
+        VirtualMachine tempVm = new VirtualMachine(new Chunk());
+        Compiler compiler = new Compiler(tempVm);
         Chunk chunk = compiler.compile(statements);
 
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(outputFile))) {
@@ -118,6 +119,7 @@ public class MabelCompiler {
             }
         }
 
+        // Clean up temp directory
         deleteDirectory(tempDir);
 
         System.out.println("Created executable JAR: " + jarFile);
@@ -132,7 +134,7 @@ public class MabelCompiler {
                     try {
                         Files.delete(path);
                     } catch (IOException e) {
-                        // Nothing
+                        // Ignore
                     }
                 });
     }
@@ -167,13 +169,26 @@ public class MabelCompiler {
             if (hadError)
                 return;
 
-            Compiler compiler = new Compiler();
+            VirtualMachine vm = new VirtualMachine(new Chunk());
+            Compiler compiler = new Compiler(vm);
             Chunk chunk = compiler.compile(statements);
 
-            VirtualMachine vm = new VirtualMachine(chunk);
-            vm.run();
+            VirtualMachine finalVm = new VirtualMachine(chunk);
+
+            Map<String, Object> compileGlobals = vm.getGlobals();
+            Map<String, Object> execGlobals = finalVm.getGlobals();
+            for (String key : compileGlobals.keySet()) {
+                Object value = compileGlobals.get(key);
+                if (value instanceof MabelFunction) {
+                    execGlobals.put(key, value);
+                    System.out.println("DEBUG: Copied function '" + key + "' to execution VM");
+                }
+            }
+
+            finalVm.run();
         } catch (Exception e) {
             System.err.println("Runtime error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

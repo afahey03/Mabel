@@ -5,16 +5,32 @@ abstract class Expr {
 
     interface Visitor<R> {
         R visitAssignExpr(Assign expr);
+
         R visitBinaryExpr(Binary expr);
+
         R visitCallExpr(Call expr);
+
         R visitGetExpr(Get expr);
+
+        R visitSetExpr(Set expr);
+
         R visitGroupingExpr(Grouping expr);
+
         R visitLiteralExpr(Literal expr);
+
         R visitLogicalExpr(Logical expr);
+
         R visitUnaryExpr(Unary expr);
+
         R visitVariableExpr(Variable expr);
+
         R visitArrayExpr(Array expr);
+
         R visitIndexExpr(Index expr);
+
+        R visitThisExpr(This expr);
+
+        R visitSuperExpr(Super expr);
     }
 
     static class Assign extends Expr {
@@ -78,6 +94,23 @@ abstract class Expr {
         @Override
         <R> R accept(Visitor<R> visitor) {
             return visitor.visitGetExpr(this);
+        }
+    }
+
+    static class Set extends Expr {
+        final Expr object;
+        final Token name;
+        final Expr value;
+
+        Set(Expr object, Token name, Expr value) {
+            this.object = object;
+            this.name = name;
+            this.value = value;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSetExpr(this);
         }
     }
 
@@ -179,6 +212,34 @@ abstract class Expr {
             return visitor.visitIndexExpr(this);
         }
     }
+
+    static class This extends Expr {
+        final Token keyword;
+
+        This(Token keyword) {
+            this.keyword = keyword;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitThisExpr(this);
+        }
+    }
+
+    static class Super extends Expr {
+        final Token keyword;
+        final Token method;
+
+        Super(Token keyword, Token method) {
+            this.keyword = keyword;
+            this.method = method;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitSuperExpr(this);
+        }
+    }
 }
 
 abstract class Stmt {
@@ -186,12 +247,21 @@ abstract class Stmt {
 
     interface Visitor<R> {
         R visitBlockStmt(Block stmt);
+
+        R visitClassStmt(Class stmt);
+
         R visitExpressionStmt(Expression stmt);
+
         R visitFunctionStmt(Function stmt);
+
         R visitIfStmt(If stmt);
+
         R visitPrintStmt(Print stmt);
+
         R visitReturnStmt(Return stmt);
+
         R visitVarStmt(Var stmt);
+
         R visitWhileStmt(While stmt);
     }
 
@@ -205,6 +275,23 @@ abstract class Stmt {
         @Override
         <R> R accept(Visitor<R> visitor) {
             return visitor.visitBlockStmt(this);
+        }
+    }
+
+    static class Class extends Stmt {
+        final Token name;
+        final Expr.Variable superclass;
+        final List<Stmt.Function> methods;
+
+        Class(Token name, Expr.Variable superclass, List<Stmt.Function> methods) {
+            this.name = name;
+            this.superclass = superclass;
+            this.methods = methods;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitClassStmt(this);
         }
     }
 
@@ -224,11 +311,15 @@ abstract class Stmt {
     static class Function extends Stmt {
         final Token name;
         final List<Token> params;
+        final List<Token> paramTypes;
+        final Token returnType;
         final List<Stmt> body;
 
-        Function(Token name, List<Token> params, List<Stmt> body) {
+        Function(Token name, List<Token> params, List<Token> paramTypes, Token returnType, List<Stmt> body) {
             this.name = name;
             this.params = params;
+            this.paramTypes = paramTypes;
+            this.returnType = returnType;
             this.body = body;
         }
 

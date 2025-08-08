@@ -1,0 +1,25 @@
+class Person {
+    function init(name: string, age: int) {
+        this.name = name
+        this.age = age
+    }
+    
+    function greet(): string {
+        return "Hello, I'm " + this.name
+    }
+}
+
+class Student < Person {
+    function init(name: string, age: int, grade: string) {
+        super.init(name, age)
+        this.grade = grade
+    }
+}
+
+function factorial(n: int): int {
+    if (n <= 1) return 1
+    return n * factorial(n - 1)
+}
+
+let student = new Student("Alice", 16, "11th")
+print student.greet()

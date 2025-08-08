@@ -9,6 +9,8 @@ enum OpCode {
     GET_GLOBAL,
     DEFINE_GLOBAL,
     SET_GLOBAL,
+    GET_PROPERTY,
+    SET_PROPERTY,
     EQUAL,
     GREATER,
     LESS,
@@ -27,7 +29,17 @@ enum OpCode {
     RETURN,
     ARRAY,
     INDEX_GET,
-    INDEX_SET
+    INDEX_SET,
+    CLASS,
+    INHERIT,
+    METHOD,
+    INVOKE,
+    SUPER_INVOKE,
+    GET_SUPER,
+    CLOSURE,
+    GET_UPVALUE,
+    SET_UPVALUE,
+    CLOSE_UPVALUE
 }
 
 class Chunk {

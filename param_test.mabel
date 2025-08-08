@@ -1,0 +1,16 @@
+function greet(name) {
+    print "Hello, " + name + "!"
+}
+
+function add(a, b) {
+    let result = a + b
+    print str(a) + " + " + str(b) + " = " + str(result)
+    return result
+}
+
+// Test function calls
+greet("Alice")
+greet("Bob")
+
+let sum = add(5, 3)
+print "Sum returned: " + str(sum)
