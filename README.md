@@ -9,11 +9,11 @@ Mabel has its own lexer, parser, compiler, and virtual machine to allow one to w
 I am currently working on adding functionality for user defined classes, as I would like Mabel to be Object Oriented.
 
 # Interactive REPL
-java MabelCompiler
+- java MabelCompiler
 # Compile to bytecode then run
-java MabelCompiler program.mabel - Creates program.mbc and program.jar
-java MabelCompiler program.mbc - Runs bytecode
-java -jar program.jar - Also runs bytecode
+- java MabelCompiler program.mabel - Creates program.mbc and program.jar
+- java MabelCompiler program.mbc - Runs bytecode
+- java -jar program.jar - Also runs bytecode
 
 ## Sample Program and Output:
 # Program
