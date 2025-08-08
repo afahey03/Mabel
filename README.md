@@ -18,27 +18,27 @@ I am currently working on adding functionality for user defined classes, as I wo
 # Sample Program and Output:
 ## Program
 ```
-function greet(name) {
-    print "Hello, " + name + "!"
+function factorial(n) {
+    if (n <= 1) {
+        print "Base case: " + str(n)
+        return 1
+    }
+    print "Computing factorial of " + str(n)
+    return n * factorial(n - 1)
 }
 
-function add(a, b) {
-    let result = a + b
-    print str(a) + " + " + str(b) + " = " + str(result)
-    return result
-}
-
-greet("Mabel")
-greet("Aidan")
-
-let sum = add(5, 3)
-print "Sum returned: " + str(sum)
+print "Running factorial(5):"
+let result = factorial(5)
+print "Result: " + str(result)
 ```
 
 ## Output
 ```
-Hello, Mabel!
-Hello, Aidan!
-5 + 3 = 8
-Sum returned: 8
+Running factorial(5):
+Computing factorial of 5
+Computing factorial of 4
+Computing factorial of 3
+Computing factorial of 2
+Base case: 1
+Result: 120
 ```
