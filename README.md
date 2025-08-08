@@ -6,7 +6,7 @@ But, it was fun to make, and it's pretty cool that it works at all.
 
 Mabel has its own lexer, parser, compiler, and virtual machine to allow one to write code, compile, and then run an executable.
 
-I am currently working on adding functionality for user defined classes, as I would like Mabel to be Object Oriented.
+I am currently working on adding functionality for inheritance and interfaces.
 
 # Interactive REPL
 - java MabelCompiler
