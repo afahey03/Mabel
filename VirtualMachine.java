@@ -58,8 +58,8 @@ class VirtualMachine {
             switch (op) {
                 case CONSTANT:
                     Object constant = chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
-                    System.out.println("DEBUG: Loading constant: " + constant + " (type: " +
-                            (constant == null ? "null" : constant.getClass().getSimpleName()) + ")");
+                    // System.out.println("DEBUG: Loading constant: " + constant + " (type: " +
+                    // (constant == null ? "null" : constant.getClass().getSimpleName()) + ")");
                     push(constant);
                     break;
 
@@ -92,8 +92,9 @@ class VirtualMachine {
                 case DEFINE_GLOBAL: {
                     String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
                     Object value = peek();
-                    System.out.println("DEBUG: Defining global '" + name + "' = " + value +
-                            " (type: " + (value == null ? "null" : value.getClass().getSimpleName()) + ")");
+                    // System.out.println("DEBUG: Defining global '" + name + "' = " + value +
+                    // " (type: " + (value == null ? "null" : value.getClass().getSimpleName()) +
+                    // ")");
                     globals.put(name, value);
                     pop();
                     break;
@@ -233,8 +234,10 @@ class VirtualMachine {
                     Object callee = peek(0);
 
                     // DEBUG OUTPUT
-                    System.out.println("DEBUG: CALL - argCount=" + argCount + ", callee=" + callee +
-                            " (type: " + (callee == null ? "null" : callee.getClass().getSimpleName()) + ")");
+                    // System.out.println("DEBUG: CALL - argCount=" + argCount + ", callee=" +
+                    // callee +
+                    // " (type: " + (callee == null ? "null" : callee.getClass().getSimpleName()) +
+                    // ")");
 
                     if (callee instanceof MabelBuiltin) {
                         MabelBuiltin builtin = (MabelBuiltin) callee;
@@ -264,11 +267,14 @@ class VirtualMachine {
                         push(result);
                     } else {
                         // STACK DEBUG
-                        System.out.println("DEBUG: Stack contents:");
-                        for (int i = 0; i < Math.min(5, stack.size()); i++) {
-                            System.out.println(
-                                    "  [" + i + "] " + peek(i) + " (" + peek(i).getClass().getSimpleName() + ")");
-                        }
+                        /*
+                         * System.out.println("DEBUG: Stack contents:");
+                         * for (int i = 0; i < Math.min(5, stack.size()); i++) {
+                         * System.out.println(
+                         * "  [" + i + "] " + peek(i) + " (" + peek(i).getClass().getSimpleName() +
+                         * ")");
+                         * }
+                         */
                         throw new RuntimeException("Can only call functions and classes. Got: " +
                                 (callee == null ? "null" : callee.getClass().getSimpleName()));
                     }
@@ -404,7 +410,7 @@ class VirtualMachine {
         return a.equals(b);
     }
 
-    private String stringify(Object object) {
+    public String stringify(Object object) {
         if (object == null)
             return "nil";
         if (object instanceof Double) {
@@ -443,7 +449,8 @@ class VirtualMachine {
 
     private void executeStatement(Stmt statement, Environment environment) {
         try {
-            System.out.println("DEBUG: Executing statement: " + statement.getClass().getSimpleName());
+            // System.out.println("DEBUG: Executing statement: " +
+            // statement.getClass().getSimpleName());
             if (statement instanceof Stmt.Print) {
                 Stmt.Print printStmt = (Stmt.Print) statement;
                 Object value = evaluateExpression(printStmt.expression, environment);

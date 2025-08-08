@@ -119,7 +119,6 @@ public class MabelCompiler {
             }
         }
 
-        // Clean up temp directory
         deleteDirectory(tempDir);
 
         System.out.println("Created executable JAR: " + jarFile);

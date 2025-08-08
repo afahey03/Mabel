@@ -39,12 +39,11 @@ class MabelFunction implements MabelCallable, Serializable {
     if (declaration == null)
       return null;
 
-    System.out.println("DEBUG: Function " + declaration.name.lexeme + " called with args: " + arguments);
+    // System.out.println("DEBUG: Function " + declaration.name.lexeme + " called
+    // with args: " + arguments);
 
-    // Create new environment for function execution with access to globals
     Environment globalEnv = new Environment();
 
-    // Add built-ins to the environment
     Map<String, Object> vmGlobals = vm.getGlobals();
     globalEnv.define("print", vmGlobals.get("print"));
     globalEnv.define("len", vmGlobals.get("len"));
@@ -53,24 +52,23 @@ class MabelFunction implements MabelCallable, Serializable {
 
     Environment environment = new Environment(globalEnv);
 
-    // Bind parameters to arguments
     if (declaration.params != null && arguments != null) {
       for (int i = 0; i < declaration.params.size(); i++) {
         if (i < arguments.size()) {
           String paramName = declaration.params.get(i).lexeme;
           Object argValue = arguments.get(i);
-          System.out.println("DEBUG: Binding parameter '" + paramName + "' to value: " + argValue);
+          // System.out.println("DEBUG: Binding parameter '" + paramName + "' to value: "
+          // + argValue);
           environment.define(paramName, argValue);
         }
       }
     }
 
     try {
-      // Execute function body
-      System.out.println("DEBUG: Executing function body...");
+      // System.out.println("DEBUG: Executing function body...");
       vm.executeBlock(declaration.body, environment);
     } catch (ReturnValue returnValue) {
-      System.out.println("DEBUG: Function returned: " + returnValue.value);
+      // System.out.println("DEBUG: Function returned: " + returnValue.value);
       if (isInitializer)
         return closure != null ? closure.getAt(0, "this") : null;
       return returnValue.value;
@@ -78,7 +76,7 @@ class MabelFunction implements MabelCallable, Serializable {
 
     if (isInitializer)
       return closure != null ? closure.getAt(0, "this") : null;
-    System.out.println("DEBUG: Function completed normally");
+    // System.out.println("DEBUG: Function completed normally");
     return null;
   }
 }

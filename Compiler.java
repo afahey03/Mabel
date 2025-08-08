@@ -303,23 +303,74 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        System.out.println("DEBUG: Compiling function: " + stmt.name.lexeme);
+        // System.out.println("DEBUG: Compiling function: " + stmt.name.lexeme);
 
         List<String> paramNames = new ArrayList<>();
         for (Token param : stmt.params) {
             paramNames.add(param.lexeme);
         }
 
+        List<SerializableStatement> serializableBody = new ArrayList<>();
+        for (Stmt bodyStmt : stmt.body) {
+            SerializableStatement serializable = convertStatement(bodyStmt);
+            if (serializable != null) {
+                serializableBody.add(serializable);
+            }
+        }
+
         SerializableFunction function = new SerializableFunction(
                 stmt.name.lexeme,
                 paramNames,
-                new ArrayList<>());
+                serializableBody);
 
         int constant = makeConstant(stmt.name.lexeme);
         emitConstant(function);
         emitBytes(OpCode.DEFINE_GLOBAL, (byte) constant);
 
         return null;
+    }
+
+    private SerializableStatement convertStatement(Stmt stmt) {
+        if (stmt instanceof Stmt.Print) {
+            Stmt.Print printStmt = (Stmt.Print) stmt;
+            return SerializableStatement.print(convertExpression(printStmt.expression));
+        } else if (stmt instanceof Stmt.Var) {
+            Stmt.Var varStmt = (Stmt.Var) stmt;
+            SerializableExpression init = varStmt.initializer != null ? convertExpression(varStmt.initializer) : null;
+            return SerializableStatement.var(varStmt.name.lexeme, init);
+        } else if (stmt instanceof Stmt.Return) {
+            Stmt.Return returnStmt = (Stmt.Return) stmt;
+            SerializableExpression value = returnStmt.value != null ? convertExpression(returnStmt.value) : null;
+            return SerializableStatement.returnStmt(value);
+        } else if (stmt instanceof Stmt.Expression) {
+            Stmt.Expression exprStmt = (Stmt.Expression) stmt;
+            return SerializableStatement.expression(convertExpression(exprStmt.expression));
+        }
+
+        return null;
+    }
+
+    private SerializableExpression convertExpression(Expr expr) {
+        if (expr instanceof Expr.Literal) {
+            return SerializableExpression.literal(((Expr.Literal) expr).value);
+        } else if (expr instanceof Expr.Variable) {
+            return SerializableExpression.variable(((Expr.Variable) expr).name.lexeme);
+        } else if (expr instanceof Expr.Binary) {
+            Expr.Binary binExpr = (Expr.Binary) expr;
+            return SerializableExpression.binary(
+                    convertExpression(binExpr.left),
+                    binExpr.operator.lexeme,
+                    convertExpression(binExpr.right));
+        } else if (expr instanceof Expr.Call) {
+            Expr.Call callExpr = (Expr.Call) expr;
+            List<SerializableExpression> args = new ArrayList<>();
+            for (Expr arg : callExpr.arguments) {
+                args.add(convertExpression(arg));
+            }
+            return SerializableExpression.call(convertExpression(callExpr.callee), args);
+        }
+
+        return SerializableExpression.literal(null);
     }
 
     @Override

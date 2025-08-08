@@ -8,7 +8,6 @@ function add(a, b) {
     return result
 }
 
-// Test function calls
 greet("Alice")
 greet("Bob")
 
