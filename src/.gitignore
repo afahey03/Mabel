@@ -1,0 +1,11 @@
+# Ignore compiled Java bytecode
+*.class
+
+# Ignore Mabel source files
+*.mabel
+
+# Ignore Mabel compiled bytecode
+*.mbc
+
+# Ignore Java archive files
+*.jar
