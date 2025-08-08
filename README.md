@@ -17,7 +17,7 @@ java -jar program.jar - Also runs bytecode
 
 ## Sample Program and Output:
 # Program
-'''
+```
 function greet(name) {
     print "Hello, " + name + "!"
 }
@@ -33,12 +33,12 @@ greet("Aidan")
 
 let sum = add(5, 3)
 print "Sum returned: " + str(sum)
-'''
+```
 
 # Output
-'''
+```
 Hello, Mabel!
 Hello, Aidan!
 5 + 3 = 8
 Sum returned: 8
-'''
+```
