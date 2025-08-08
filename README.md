@@ -15,8 +15,8 @@ I am currently working on adding functionality for user defined classes, as I wo
 - java MabelCompiler program.mbc - Runs bytecode
 - java -jar program.jar - Also runs bytecode
 
-## Sample Program and Output:
-# Program
+# Sample Program and Output:
+## Program
 ```
 function greet(name) {
     print "Hello, " + name + "!"
@@ -35,7 +35,7 @@ let sum = add(5, 3)
 print "Sum returned: " + str(sum)
 ```
 
-# Output
+## Output
 ```
 Hello, Mabel!
 Hello, Aidan!
