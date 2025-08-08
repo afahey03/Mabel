@@ -143,13 +143,10 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitCallExpr(Expr.Call expr) {
-        // Compile arguments first
         for (Expr argument : expr.arguments) {
             compile(argument);
         }
-        // Then compile the function being called
         compile(expr.callee);
-        // Emit call instruction with argument count
         emitBytes(OpCode.CALL, (byte) expr.arguments.size());
         return null;
     }
@@ -294,7 +291,6 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             int methodConstant = makeConstant(method.name.lexeme);
             emitBytes(OpCode.METHOD, (byte) methodConstant);
 
-            // Compile method body here (simplified)
             for (Stmt bodyStmt : method.body) {
                 if (bodyStmt != null) {
                     compile(bodyStmt);
@@ -309,20 +305,16 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitFunctionStmt(Stmt.Function stmt) {
         System.out.println("DEBUG: Compiling function: " + stmt.name.lexeme);
 
-        // Create a serializable function representation
         List<String> paramNames = new ArrayList<>();
         for (Token param : stmt.params) {
             paramNames.add(param.lexeme);
         }
 
-        // For now, we'll hardcode the function behavior
         SerializableFunction function = new SerializableFunction(
                 stmt.name.lexeme,
                 paramNames,
-                new ArrayList<>() // Empty body for now
-        );
+                new ArrayList<>());
 
-        // Store the function as a global using bytecode
         int constant = makeConstant(stmt.name.lexeme);
         emitConstant(function);
         emitBytes(OpCode.DEFINE_GLOBAL, (byte) constant);
@@ -385,7 +377,6 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             throw new RuntimeException("Too much code to jump over.");
         }
 
-        // Write the jump offset as unsigned bytes
         chunk.set(offset, (byte) ((jump >> 8) & 0xff));
         chunk.set(offset + 1, (byte) (jump & 0xff));
     }
