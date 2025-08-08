@@ -1,6 +1,0 @@
-function funny(a, b) {
-    return a + b
-}
-
-let number = funny(4, 6)
-print(number)
