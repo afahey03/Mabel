@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.List;
 
 class SerializableStatement implements Serializable {
   private static final long serialVersionUID = 1L;
@@ -7,6 +8,10 @@ class SerializableStatement implements Serializable {
   String name;
   SerializableExpression expression;
   SerializableExpression initializer;
+  SerializableExpression condition;
+  SerializableStatement thenBranch;
+  SerializableStatement elseBranch;
+  List<SerializableStatement> statements;
 
   SerializableStatement(String type) {
     this.type = type;
@@ -34,6 +39,21 @@ class SerializableStatement implements Serializable {
   static SerializableStatement expression(SerializableExpression expr) {
     SerializableStatement stmt = new SerializableStatement("expression");
     stmt.expression = expr;
+    return stmt;
+  }
+
+  static SerializableStatement ifStmt(SerializableExpression condition, SerializableStatement thenBranch,
+      SerializableStatement elseBranch) {
+    SerializableStatement stmt = new SerializableStatement("if");
+    stmt.condition = condition;
+    stmt.thenBranch = thenBranch;
+    stmt.elseBranch = elseBranch;
+    return stmt;
+  }
+
+  static SerializableStatement block(List<SerializableStatement> statements) {
+    SerializableStatement stmt = new SerializableStatement("block");
+    stmt.statements = statements;
     return stmt;
   }
 }

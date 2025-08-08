@@ -8,8 +8,8 @@ function add(a, b) {
     return result
 }
 
-greet("Alice")
-greet("Bob")
+greet("Mabel")
+greet("Aidan")
 
 let sum = add(5, 3)
 print "Sum returned: " + str(sum)

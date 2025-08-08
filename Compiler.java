@@ -345,6 +345,40 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         } else if (stmt instanceof Stmt.Expression) {
             Stmt.Expression exprStmt = (Stmt.Expression) stmt;
             return SerializableStatement.expression(convertExpression(exprStmt.expression));
+        } else if (stmt instanceof Stmt.If) {
+            Stmt.If ifStmt = (Stmt.If) stmt;
+            /*
+             * System.out.println("DEBUG: Converting If statement");
+             * System.out.println("DEBUG: - thenBranch type: "
+             * + (ifStmt.thenBranch != null ? ifStmt.thenBranch.getClass().getSimpleName() :
+             * "null"));
+             * System.out.println("DEBUG: - elseBranch type: "
+             * + (ifStmt.elseBranch != null ? ifStmt.elseBranch.getClass().getSimpleName() :
+             * "null"));
+             */
+
+            SerializableStatement thenBranch = convertStatement(ifStmt.thenBranch);
+            SerializableStatement elseBranch = ifStmt.elseBranch != null ? convertStatement(ifStmt.elseBranch) : null;
+
+            // System.out.println("DEBUG: - converted thenBranch: " + (thenBranch != null ?
+            // thenBranch.type : "null"));
+            // System.out.println("DEBUG: - converted elseBranch: " + (elseBranch != null ?
+            // elseBranch.type : "null"));
+
+            return SerializableStatement.ifStmt(
+                    convertExpression(ifStmt.condition),
+                    thenBranch,
+                    elseBranch);
+        } else if (stmt instanceof Stmt.Block) {
+            Stmt.Block blockStmt = (Stmt.Block) stmt;
+            List<SerializableStatement> statements = new ArrayList<>();
+            for (Stmt s : blockStmt.statements) {
+                SerializableStatement converted = convertStatement(s);
+                if (converted != null) {
+                    statements.add(converted);
+                }
+            }
+            return SerializableStatement.block(statements);
         }
 
         return null;
