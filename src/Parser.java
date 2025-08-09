@@ -105,6 +105,8 @@ class Parser {
     }
 
     private Stmt statement() {
+        if (match(TokenType.FOR))
+            return forStatement();
         if (match(TokenType.IF))
             return ifStatement();
         if (match(TokenType.PRINT))
@@ -117,6 +119,35 @@ class Parser {
             return new Stmt.Block(block());
 
         return expressionStatement();
+    }
+
+    private Stmt forStatement() {
+        consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+
+        Stmt initializer;
+        if (match(TokenType.SEMICOLON)) {
+            initializer = null;
+        } else if (match(TokenType.LET)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = expressionStatement();
+        }
+
+        Expr condition = null;
+        if (!check(TokenType.SEMICOLON)) {
+            condition = expression();
+        }
+        consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+        Expr increment = null;
+        if (!check(TokenType.RIGHT_PAREN)) {
+            increment = expression();
+        }
+        consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        Stmt body = statement();
+
+        return new Stmt.For(initializer, condition, increment, body);
     }
 
     private Stmt ifStatement() {

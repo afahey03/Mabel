@@ -7,11 +7,12 @@ class SerializableStatement implements Serializable {
   String type;
   String name;
   SerializableExpression expression;
-  SerializableExpression initializer;
+  SerializableStatement initializer;
   SerializableExpression condition;
+  SerializableExpression increment;
   SerializableStatement thenBranch;
   SerializableStatement elseBranch;
-  SerializableStatement body; // For while loops
+  SerializableStatement body;
   List<SerializableStatement> statements;
 
   SerializableStatement(String type) {
@@ -27,7 +28,7 @@ class SerializableStatement implements Serializable {
   static SerializableStatement var(String name, SerializableExpression initializer) {
     SerializableStatement stmt = new SerializableStatement("var");
     stmt.name = name;
-    stmt.initializer = initializer;
+    stmt.expression = initializer;
     return stmt;
   }
 
@@ -55,6 +56,18 @@ class SerializableStatement implements Serializable {
   static SerializableStatement whileStmt(SerializableExpression condition, SerializableStatement body) {
     SerializableStatement stmt = new SerializableStatement("while");
     stmt.condition = condition;
+    stmt.body = body;
+    return stmt;
+  }
+
+  static SerializableStatement forStmt(SerializableStatement initializer,
+      SerializableExpression condition,
+      SerializableExpression increment,
+      SerializableStatement body) {
+    SerializableStatement stmt = new SerializableStatement("for");
+    stmt.initializer = initializer;
+    stmt.condition = condition;
+    stmt.increment = increment;
     stmt.body = body;
     return stmt;
   }

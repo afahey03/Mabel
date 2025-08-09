@@ -282,6 +282,27 @@ abstract class Stmt {
         R visitVarStmt(Var stmt);
 
         R visitWhileStmt(While stmt);
+
+        R visitForStmt(For stmt);
+    }
+
+    static class For extends Stmt {
+        final Stmt initializer;
+        final Expr condition;
+        final Expr increment;
+        final Stmt body;
+
+        For(Stmt initializer, Expr condition, Expr increment, Stmt body) {
+            this.initializer = initializer;
+            this.condition = condition;
+            this.increment = increment;
+            this.body = body;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitForStmt(this);
+        }
     }
 
     static class Block extends Stmt {

@@ -106,10 +106,33 @@ class SerializableFunction implements MabelCallable, Serializable {
 
       case "var":
         Object initValue = null;
-        if (stmt.initializer != null) {
-          initValue = evaluateSerializableExpression(stmt.initializer, env, vm);
+        if (stmt.expression != null) {
+          initValue = evaluateSerializableExpression(stmt.expression, env, vm);
         }
         env.define(stmt.name, initValue);
+        return null;
+
+      case "for":
+        if (stmt.initializer != null) {
+          executeSerializableStatement(stmt.initializer, env, vm);
+        }
+
+        while (true) {
+          if (stmt.condition != null) {
+            Object conditionResult = evaluateSerializableExpression(stmt.condition, env, vm);
+            if (!isTruthy(conditionResult)) {
+              break;
+            }
+          }
+
+          if (stmt.body != null) {
+            executeSerializableStatement(stmt.body, env, vm);
+          }
+
+          if (stmt.increment != null) {
+            evaluateSerializableExpression(stmt.increment, env, vm);
+          }
+        }
         return null;
 
       case "return":

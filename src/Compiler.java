@@ -393,6 +393,14 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             return SerializableStatement.whileStmt(
                     convertExpression(whileStmt.condition),
                     convertStatement(whileStmt.body));
+        } else if (stmt instanceof Stmt.For) {
+            Stmt.For forStmt = (Stmt.For) stmt;
+            SerializableStatement initializer = forStmt.initializer != null ? convertStatement(forStmt.initializer)
+                    : null;
+            SerializableExpression condition = forStmt.condition != null ? convertExpression(forStmt.condition) : null;
+            SerializableExpression increment = forStmt.increment != null ? convertExpression(forStmt.increment) : null;
+            SerializableStatement body = convertStatement(forStmt.body);
+            return SerializableStatement.forStmt(initializer, condition, increment, body);
         }
 
         return null;
@@ -540,5 +548,38 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         emitByte((byte) ((offset >> 8) & 0xff));
         emitByte((byte) (offset & 0xff));
+    }
+
+    @Override
+    public Void visitForStmt(Stmt.For stmt) {
+        if (stmt.initializer != null) {
+            compile(stmt.initializer);
+        }
+
+        int loopStart = chunk.size();
+
+        Expr condition = stmt.condition;
+        if (condition == null) {
+            emitByte(OpCode.TRUE);
+        } else {
+            compile(condition);
+        }
+
+        int exitJump = emitJump(OpCode.JUMP_IF_FALSE);
+        emitByte(OpCode.POP);
+
+        compile(stmt.body);
+
+        if (stmt.increment != null) {
+            compile(stmt.increment);
+            emitByte(OpCode.POP);
+        }
+
+        emitLoop(loopStart);
+
+        patchJump(exitJump);
+        emitByte(OpCode.POP);
+
+        return null;
     }
 }

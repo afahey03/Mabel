@@ -53,7 +53,7 @@ java -jar hello.jar
 ## Language Basics
 
 ### Program Structure
-- Statements are terminated by newlines or semicolons
+- Statements are terminated by newlines (or semicolons in the case of for loops)
 - Code blocks use curly braces `{}`
 - Indentation is not significant but recommended for readability
 - Entry point is the top-level code (no main function required)
