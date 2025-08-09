@@ -81,7 +81,6 @@ All numbers are double-precision floating point:
 let integer = 42
 let decimal = 3.14159
 let negative = -17.5
-let scientific = 1.23e10  // If supported by lexer
 ```
 
 ### Strings
