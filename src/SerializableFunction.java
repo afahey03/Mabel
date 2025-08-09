@@ -192,6 +192,21 @@ class SerializableFunction implements MabelCallable, Serializable {
           throw e;
         }
 
+      case "unary":
+        Object operand = evaluateSerializableExpression(expr.right, env, vm);
+        switch (expr.operator) {
+          case "-":
+            if (operand instanceof Double) {
+              return -(Double) operand;
+            }
+            throw new RuntimeException("Operand must be a number.");
+          case "!":
+          case "not":
+            return !isTruthy(operand);
+          default:
+            throw new RuntimeException("Unknown unary operator: " + expr.operator);
+        }
+
       case "binary":
         Object left = evaluateSerializableExpression(expr.left, env, vm);
         Object right = evaluateSerializableExpression(expr.right, env, vm);
@@ -200,9 +215,24 @@ class SerializableFunction implements MabelCallable, Serializable {
           case "+":
             if (left instanceof Double && right instanceof Double) {
               return (Double) left + (Double) right;
-            } else {
+            } else if (left instanceof String || right instanceof String) {
               return vm.stringify(left) + vm.stringify(right);
+            } else if (left instanceof List && right instanceof List) {
+              List<Object> result = new ArrayList<>();
+              result.addAll((List<?>) left);
+              result.addAll((List<?>) right);
+              return result;
+            } else if (left instanceof List) {
+              List<Object> result = new ArrayList<>((List<?>) left);
+              result.add(right);
+              return result;
+            } else if (right instanceof List) {
+              List<Object> result = new ArrayList<>();
+              result.add(left);
+              result.addAll((List<?>) right);
+              return result;
             }
+            break;
           case "-":
             if (left instanceof Double && right instanceof Double) {
               return (Double) left - (Double) right;
@@ -216,6 +246,11 @@ class SerializableFunction implements MabelCallable, Serializable {
           case "/":
             if (left instanceof Double && right instanceof Double) {
               return (Double) left / (Double) right;
+            }
+            break;
+          case "%":
+            if (left instanceof Double && right instanceof Double) {
+              return (Double) left % (Double) right;
             }
             break;
           case "<=":
@@ -242,6 +277,10 @@ class SerializableFunction implements MabelCallable, Serializable {
             return isEqual(left, right);
           case "!=":
             return !isEqual(left, right);
+          case "and":
+            return isTruthy(left) && isTruthy(right);
+          case "or":
+            return isTruthy(left) || isTruthy(right);
         }
         break;
 
@@ -272,10 +311,10 @@ class SerializableFunction implements MabelCallable, Serializable {
 
       case "set":
         Object obj = evaluateSerializableExpression(expr.object, env, vm);
-        Object val = evaluateSerializableExpression(expr.right, env, vm);
+        Object setValue = evaluateSerializableExpression(expr.right, env, vm);
         if (obj instanceof SerializableInstance) {
-          ((SerializableInstance) obj).set(expr.name, val);
-          return val;
+          ((SerializableInstance) obj).set(expr.name, setValue);
+          return setValue;
         }
         throw new RuntimeException("Only instances have fields.");
 
@@ -323,6 +362,23 @@ class SerializableFunction implements MabelCallable, Serializable {
           return String.valueOf(str.charAt(i));
         }
         throw new RuntimeException("Invalid index operation.");
+
+      case "indexSet":
+        Object arr = evaluateSerializableExpression(expr.object, env, vm);
+        Object idx = evaluateSerializableExpression(expr.right, env, vm);
+        Object indexSetValue = evaluateSerializableExpression(expr.indexSetValue, env, vm);
+
+        if (arr instanceof List && idx instanceof Double) {
+          @SuppressWarnings("unchecked")
+          List<Object> list = (List<Object>) arr;
+          int i = ((Double) idx).intValue();
+          if (i < 0 || i >= list.size()) {
+            throw new RuntimeException("Array index out of bounds.");
+          }
+          list.set(i, indexSetValue);
+          return indexSetValue;
+        }
+        throw new RuntimeException("Invalid index set operation.");
     }
 
     return null;

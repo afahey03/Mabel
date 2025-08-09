@@ -12,6 +12,7 @@ class SerializableExpression implements Serializable {
   SerializableExpression right;
   SerializableExpression callee;
   SerializableExpression object;
+  SerializableExpression indexSetValue;
   List<SerializableExpression> arguments;
   List<SerializableExpression> elements;
 
@@ -83,6 +84,15 @@ class SerializableExpression implements Serializable {
     SerializableExpression expr = new SerializableExpression("index");
     expr.object = object;
     expr.right = index;
+    return expr;
+  }
+
+  static SerializableExpression indexSet(SerializableExpression object, SerializableExpression index,
+      SerializableExpression value) {
+    SerializableExpression expr = new SerializableExpression("indexSet");
+    expr.object = object;
+    expr.right = index;
+    expr.indexSetValue = value;
     return expr;
   }
 }

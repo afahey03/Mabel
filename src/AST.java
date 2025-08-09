@@ -31,6 +31,25 @@ abstract class Expr {
         R visitThisExpr(This expr);
 
         R visitSuperExpr(Super expr);
+
+        R visitIndexSetExpr(IndexSet expr);
+    }
+
+    static class IndexSet extends Expr {
+        final Expr object;
+        final Expr index;
+        final Expr value;
+
+        IndexSet(Expr object, Expr index, Expr value) {
+            this.object = object;
+            this.index = index;
+            this.value = value;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitIndexSetExpr(this);
+        }
     }
 
     static class Assign extends Expr {

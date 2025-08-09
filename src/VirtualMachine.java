@@ -48,6 +48,217 @@ class VirtualMachine {
                 throw new RuntimeException("Cannot convert " + arg.getClass().getSimpleName() + " to number");
             }
         });
+
+        // New array built-ins
+        globals.put("push", new MabelBuiltin("push", 2) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+                Object item = args.get(1);
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'push' can only be applied to arrays");
+                }
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                list.add(item);
+                return item;
+            }
+        });
+
+        globals.put("pop", new MabelBuiltin("pop", 1) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'pop' can only be applied to arrays");
+                }
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                if (list.isEmpty()) {
+                    throw new RuntimeException("Cannot pop from empty array");
+                }
+                return list.remove(list.size() - 1);
+            }
+        });
+
+        globals.put("shift", new MabelBuiltin("shift", 1) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'shift' can only be applied to arrays");
+                }
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                if (list.isEmpty()) {
+                    throw new RuntimeException("Cannot shift from empty array");
+                }
+                return list.remove(0);
+            }
+        });
+
+        globals.put("unshift", new MabelBuiltin("unshift", 2) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+                Object item = args.get(1);
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'unshift' can only be applied to arrays");
+                }
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                list.add(0, item);
+                return item;
+            }
+        });
+
+        globals.put("slice", new MabelBuiltin("slice", 3) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+                Object startObj = args.get(1);
+                Object endObj = args.get(2);
+
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'slice' can only be applied to arrays");
+                }
+                if (!(startObj instanceof Double)) {
+                    throw new RuntimeException("'slice' start index must be a number");
+                }
+                if (!(endObj instanceof Double)) {
+                    throw new RuntimeException("'slice' end index must be a number");
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                int start = ((Double) startObj).intValue();
+                int end = ((Double) endObj).intValue();
+
+                if (start < 0)
+                    start = Math.max(0, list.size() + start);
+                if (end < 0)
+                    end = Math.max(0, list.size() + end);
+
+                start = Math.max(0, Math.min(start, list.size()));
+                end = Math.max(0, Math.min(end, list.size()));
+
+                if (start > end) {
+                    return new ArrayList<>();
+                }
+
+                return new ArrayList<>(list.subList(start, end));
+            }
+        });
+
+        globals.put("indexOf", new MabelBuiltin("indexOf", 2) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+                Object item = args.get(1);
+
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'indexOf' can only be applied to arrays");
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                int index = list.indexOf(item);
+                return (double) index;
+            }
+        });
+
+        globals.put("contains", new MabelBuiltin("contains", 2) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+                Object item = args.get(1);
+
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'contains' can only be applied to arrays");
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                return list.contains(item);
+            }
+        });
+
+        globals.put("reverse", new MabelBuiltin("reverse", 1) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'reverse' can only be applied to arrays");
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                Collections.reverse(list);
+                return list;
+            }
+        });
+
+        globals.put("sort", new MabelBuiltin("sort", 1) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'sort' can only be applied to arrays");
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+
+                list.sort((a, b) -> {
+                    if (a instanceof Double && b instanceof Double) {
+                        return Double.compare((Double) a, (Double) b);
+                    } else if (a instanceof String && b instanceof String) {
+                        return ((String) a).compareTo((String) b);
+                    } else {
+                        if (a instanceof Double && b instanceof String)
+                            return -1;
+                        if (a instanceof String && b instanceof Double)
+                            return 1;
+                        return 0;
+                    }
+                });
+
+                return list;
+            }
+        });
+
+        globals.put("clear", new MabelBuiltin("clear", 1) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'clear' can only be applied to arrays");
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                list.clear();
+                return null;
+            }
+        });
+
+        globals.put("copy", new MabelBuiltin("copy", 1) {
+            @Override
+            public Object call(List<Object> args) {
+                Object arr = args.get(0);
+
+                if (!(arr instanceof List)) {
+                    throw new RuntimeException("'copy' can only be applied to arrays");
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Object> list = (List<Object>) arr;
+                return new ArrayList<>(list);
+            }
+        });
     }
 
     public void run() {
@@ -143,8 +354,24 @@ class VirtualMachine {
                         push((Double) a + (Double) b);
                     } else if (a instanceof String && b instanceof String) {
                         push((String) a + (String) b);
+                    } else if (a instanceof String || b instanceof String) {
+                        push(stringify(a) + stringify(b));
+                    } else if (a instanceof List && b instanceof List) {
+                        List<Object> result = new ArrayList<>();
+                        result.addAll((List<?>) a);
+                        result.addAll((List<?>) b);
+                        push(result);
+                    } else if (a instanceof List) {
+                        List<Object> result = new ArrayList<>((List<?>) a);
+                        result.add(b);
+                        push(result);
+                    } else if (b instanceof List) {
+                        List<Object> result = new ArrayList<>();
+                        result.add(a);
+                        result.addAll((List<?>) b);
+                        push(result);
                     } else {
-                        throw new RuntimeException("Operands must be two numbers or two strings.");
+                        throw new RuntimeException("Operands must be two numbers, two strings, or arrays.");
                     }
                     break;
                 }
@@ -389,6 +616,26 @@ class VirtualMachine {
                 case CLOSURE: {
                     String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
                     push(new MabelFunction(null, null, false));
+                    break;
+                }
+
+                case INDEX_SET: {
+                    Object value = pop();
+                    Object index = pop();
+                    Object object = pop();
+
+                    if (object instanceof List && index instanceof Double) {
+                        @SuppressWarnings("unchecked")
+                        List<Object> list = (List<Object>) object;
+                        int i = ((Double) index).intValue();
+                        if (i < 0 || i >= list.size()) {
+                            throw new RuntimeException("Array index out of bounds.");
+                        }
+                        list.set(i, value);
+                        push(value);
+                    } else {
+                        throw new RuntimeException("Invalid index set operation.");
+                    }
                     break;
                 }
 

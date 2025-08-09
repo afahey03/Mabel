@@ -115,6 +115,15 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitIndexSetExpr(Expr.IndexSet expr) {
+        compile(expr.object);
+        compile(expr.index);
+        compile(expr.value);
+        emitByte(OpCode.INDEX_SET);
+        return null;
+    }
+
+    @Override
     public Void visitLogicalExpr(Expr.Logical expr) {
         compile(expr.left);
 
@@ -275,13 +284,11 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
-        System.out.println("DEBUG: Compiling class: " + stmt.name.lexeme);
+        // System.out.println("DEBUG: Compiling class: " + stmt.name.lexeme);
 
-        // Extract field declarations from the class methods
         Map<String, Object> defaultFieldValues = new HashMap<>();
         Map<String, SerializableFunction> methods = new HashMap<>();
 
-        // Process each method in the class
         for (Stmt.Function method : stmt.methods) {
             List<String> paramNames = new ArrayList<>();
             for (Token param : method.params) {
@@ -304,21 +311,14 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             methods.put(method.name.lexeme, function);
         }
 
-        // Handle superclass if present
         SerializableClass superclass = null;
-        if (stmt.superclass != null) {
-            // This would need to be resolved from the globals
-            // For now, we'll leave it as null
-        }
 
-        // Create the class
         SerializableClass klass = new SerializableClass(
                 stmt.name.lexeme,
                 superclass,
                 methods,
                 defaultFieldValues);
 
-        // Store the class as a constant and define it globally
         int constant = makeConstant(stmt.name.lexeme);
         emitConstant(klass);
         emitBytes(OpCode.DEFINE_GLOBAL, (byte) constant);
@@ -446,6 +446,27 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             return SerializableExpression.index(
                     convertExpression(indexExpr.object),
                     convertExpression(indexExpr.index));
+        } else if (expr instanceof Expr.IndexSet) {
+            Expr.IndexSet indexSetExpr = (Expr.IndexSet) expr;
+            return SerializableExpression.indexSet(
+                    convertExpression(indexSetExpr.object),
+                    convertExpression(indexSetExpr.index),
+                    convertExpression(indexSetExpr.value));
+        } else if (expr instanceof Expr.Grouping) {
+            Expr.Grouping groupingExpr = (Expr.Grouping) expr;
+            return convertExpression(groupingExpr.expression);
+        } else if (expr instanceof Expr.Unary) {
+            Expr.Unary unaryExpr = (Expr.Unary) expr;
+            SerializableExpression unary = new SerializableExpression("unary");
+            unary.operator = unaryExpr.operator.lexeme;
+            unary.right = convertExpression(unaryExpr.right);
+            return unary;
+        } else if (expr instanceof Expr.Logical) {
+            Expr.Logical logicalExpr = (Expr.Logical) expr;
+            return SerializableExpression.binary(
+                    convertExpression(logicalExpr.left),
+                    logicalExpr.operator.lexeme,
+                    convertExpression(logicalExpr.right));
         }
 
         return SerializableExpression.literal(null);

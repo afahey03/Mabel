@@ -207,6 +207,9 @@ class Parser {
             } else if (expr instanceof Expr.Get) {
                 Expr.Get get = (Expr.Get) expr;
                 return new Expr.Set(get.object, get.name, value);
+            } else if (expr instanceof Expr.Index) {
+                Expr.Index indexExpr = (Expr.Index) expr;
+                return new Expr.IndexSet(indexExpr.object, indexExpr.index, value);
             }
 
             error(equals, "Invalid assignment target.");
