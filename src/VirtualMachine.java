@@ -608,17 +608,6 @@ class VirtualMachine {
                     break;
                 }
 
-                case METHOD: {
-                    String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
-                    break;
-                }
-
-                case CLOSURE: {
-                    String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
-                    push(new MabelFunction(null, null, false));
-                    break;
-                }
-
                 case INDEX_SET: {
                     Object value = pop();
                     Object index = pop();
