@@ -6,8 +6,8 @@
 1. [Introduction](#introduction)
 2. [Getting Started](#getting-started)
 3. [Language Basics](#language-basics)
-4. [Variables](#variables)
-5. [Data Types](#data-types)
+4. [Data Types](#data-types)
+5. [Variables](#variables)
 6. [Operators](#operators)
 7. [Control Flow](#control-flow)
 8. [Functions](#functions)
@@ -22,7 +22,7 @@
 
 ## Introduction
 
-Mabel is a dynamically-typed, object-oriented programming language named after my Chow Chow that compiles to bytecode and runs on the Java Virtual Machine. It features:
+Mabel is a dynamically-typed, object-oriented programming language that compiles to bytecode and runs on the Java Virtual Machine. It features:
 
 - **Simple, clean syntax** inspired by JavaScript and Python
 - **Object-oriented programming** with classes and methods
@@ -53,7 +53,7 @@ java -jar hello.jar
 ## Language Basics
 
 ### Program Structure
-- Statements are terminated by newlines (or semicolons in the case of for loops)
+- Statements are terminated by newlines or semicolons
 - Code blocks use curly braces `{}`
 - Indentation is not significant but recommended for readability
 - Entry point is the top-level code (no main function required)
@@ -73,16 +73,6 @@ print "Array: " + str([1, 2, 3]) // Print arrays
 ```
 **Note:** `print` is a statement keyword, not a function - no parentheses needed.
 
-## Variables
-
-### Declaration
-Variables are declared with `let`:
-```javascript
-let x = 10
-let name = "Bob"
-let items = []
-```
-
 ## Data Types
 
 ### Numbers
@@ -91,6 +81,7 @@ All numbers are double-precision floating point:
 let integer = 42
 let decimal = 3.14159
 let negative = -17.5
+let scientific = 1.23e10  // If supported by lexer
 ```
 
 ### Strings
@@ -119,6 +110,16 @@ let numbers = [1, 2, 3, 4, 5]
 let mixed = [1, "two", 3.5, true, null]
 let nested = [[1, 2], [3, 4], [5, 6]]
 let empty = []
+```
+
+## Variables
+
+### Declaration
+Variables are declared with `let`:
+```javascript
+let x = 10
+let name = "Bob"
+let items = []
 ```
 
 ### Assignment
@@ -258,60 +259,117 @@ class ClassName {
 }
 ```
 
+### Class Inheritance
+```javascript
+// Base class
+class Animal {
+    function init(name) {
+        this.name = name
+    }
+    
+    function speak() {
+        print this.name + " makes a sound"
+    }
+}
+
+// Derived class using 'extends'
+class Dog extends Animal {
+    function init(name, breed) {
+        this.name = name     // Initialize inherited field
+        this.breed = breed   // Initialize new field
+    }
+    
+    // Override parent method
+    function speak() {
+        print this.name + " barks!"
+    }
+    
+    // Add new method
+    function wagTail() {
+        print this.name + " is wagging their tail"
+    }
+}
+```
+
 ### Object Creation
 ```javascript
 let obj = ClassName(arg1, arg2)  // Create instance
+let dog = Dog("Buddy", "Golden")  // Create derived class instance
 ```
 
 ### Accessing Members
 ```javascript
 // Method calls
 obj.methodName()
+dog.speak()         // Calls overridden method
+dog.wagTail()       // Calls new method
 
 // Field access
 let value = obj.field1
+let name = dog.name      // Access inherited field
+let breed = dog.breed    // Access new field
 
 // Field modification
 obj.field2 = newValue
+dog.name = "Max"
 ```
 
 ### The `this` Keyword
 - Refers to the current instance
 - Required when accessing instance variables
 - Automatically bound in methods
+- Works correctly with inheritance
 
-### Complete Class Example
+### Inheritance Features
+- **Single inheritance:** Classes can extend one parent class
+- **Method overriding:** Child classes can replace parent methods
+- **Method inheritance:** Child classes inherit all parent methods
+- **Field inheritance:** Instance variables are inherited
+- **Multi-level inheritance:** Classes can extend classes that extend other classes
+- **Polymorphism:** Derived instances can be used where base class is expected
+
+### Complete Inheritance Example
 ```javascript
-class BankAccount {
-    function init(owner, balance) {
-        this.owner = owner
-        this.balance = balance
+class Vehicle {
+    function init(make, model) {
+        this.make = make
+        this.model = model
+        this.speed = 0
     }
     
-    function deposit(amount) {
-        if (amount > 0) {
-            this.balance = this.balance + amount
-            return true
-        }
-        return false
+    function accelerate(amount) {
+        this.speed = this.speed + amount
+        print "Speed is now " + str(this.speed)
     }
     
-    function withdraw(amount) {
-        if (amount > 0 and amount <= this.balance) {
-            this.balance = this.balance - amount
-            return true
-        }
-        return false
-    }
-    
-    function getBalance() {
-        return this.balance
+    function getInfo() {
+        return this.make + " " + this.model
     }
 }
 
-let account = BankAccount("Alice", 1000)
-account.deposit(500)
-print "Balance: " + str(account.getBalance())
+class Car extends Vehicle {
+    function init(make, model, doors) {
+        this.make = make
+        this.model = model
+        this.speed = 0
+        this.doors = doors
+    }
+    
+    // Override parent method
+    function getInfo() {
+        return this.make + " " + this.model + " (" + str(this.doors) + "-door)"
+    }
+    
+    // New method
+    function honk() {
+        print "Beep beep!"
+    }
+}
+
+let myCar = Car("Toyota", "Camry", 4)
+print myCar.getInfo()    // "Toyota Camry (4-door)"
+myCar.accelerate(50)     // Inherited method
+myCar.honk()            // New method
 ```
 
 ## Arrays
@@ -461,7 +519,21 @@ Checks if an array contains an item.
 
 ## Examples
 
-### Example 1: Bubble Sort Implementation
+### Example 1: Fibonacci Sequence
+```javascript
+function fibonacci(n) {
+    if (n <= 1) {
+        return n
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+for (let i = 0; i < 10; i = i + 1) {
+    print "fib(" + str(i) + ") = " + str(fibonacci(i))
+}
+```
+
+### Example 2: Bubble Sort Implementation
 ```javascript
 function bubbleSort(arr) {
     let n = len(arr)
@@ -491,7 +563,7 @@ bubbleSort(numbers)
 print "Sorted: " + str(numbers)
 ```
 
-### Example 2: Stack-based Calculator
+### Example 3: Stack-based Calculator
 ```javascript
 class Calculator {
     function init() {
@@ -535,7 +607,7 @@ calc.multiply()   // 15 * 2 = 30
 print "Result: " + str(calc.result())
 ```
 
-### Example 3: Todo List Manager
+### Example 4: Todo List Manager
 ```javascript
 class TodoList {
     function init(owner) {
@@ -590,7 +662,7 @@ todo.summary()
 ## Language Specifications
 
 ### Lexical Structure
-- **Keywords:** `let`, `if`, `else`, `while`, `for`, `function`, `return`, `true`, `false`, `and`, `or`, `not`, `print`, `class`, `this`, `null`
+- **Keywords:** `let`, `if`, `else`, `while`, `for`, `function`, `return`, `true`, `false`, `and`, `or`, `not`, `print`, `class`, `extends`, `this`, `super`, `null`
 - **Identifiers:** Start with letter or underscore, followed by letters, digits, or underscores
 - **Numbers:** Integer and floating-point literals
 - **Strings:** Double-quoted only
@@ -649,8 +721,9 @@ program.mabel → [Compiler] → program.mbc + program.jar
 
 ### Current Limitations
 - No multi-line comments
-- No string escape sequences
-- No inheritance (classes are standalone)
+- No string escape sequences  
+- No `super()` constructor calls (must manually initialize parent fields)
+- No `super.method()` calls (cannot call parent's version of overridden method)
 - No interfaces or abstract classes
 - No static class members
 - No exception handling (try/catch)
@@ -659,15 +732,20 @@ program.mabel → [Compiler] → program.mbc + program.jar
 - No string interpolation
 - No operator overloading
 - No modules/imports
+- No multiple inheritance (single inheritance only)
+- No private/protected members (all members are public)
 
 ### Planned Enhancements
-- Class inheritance with `extends`
+- `super()` constructor calls for easier parent initialization
+- `super.method()` calls to invoke parent methods
 - String escape sequences (`\n`, `\t`, etc.)
 - Multi-line comments (`/* */`)
 - Exception handling
 - Module system
 - Standard library expansion
 - Optimization improvements
+- Abstract classes and interfaces
+- Private/protected member visibility
 
 ---
 
@@ -679,8 +757,10 @@ let x = 10                    // Variable
 print "Hello"                 // Print
 if (x > 5) { }               // Conditional
 while (x < 10) { }           // Loop
+for (let i = 0; i < 5; i = i + 1) { }  // For loop
 function f(x) { return x }   // Function
 class C { }                  // Class
+class D extends C { }        // Inheritance
 ```
 
 ### Array Operations
@@ -696,6 +776,7 @@ len(arr)                     // Get length
 
 ### Class Usage
 ```javascript
+// Simple class
 class Point {
     function init(x, y) {
         this.x = x
@@ -704,10 +785,35 @@ class Point {
 }
 let p = Point(10, 20)
 print str(p.x)
+
+// Inheritance
+class Shape {
+    function init(color) {
+        this.color = color
+    }
+    
+    function describe() {
+        print "A " + this.color + " shape"
+    }
+}
+
+class Circle extends Shape {
+    function init(color, radius) {
+        this.color = color
+        this.radius = radius
+    }
+    
+    function describe() {
+        print "A " + this.color + " circle with radius " + str(this.radius)
+    }
+}
+
+let c = Circle("red", 5)
+c.describe()  // "A red circle with radius 5"
 ```
 
 ---
 
 *Mabel Programming Language - Version 1.0*  
 *Created by Aidan Fahey*  
-*Documentation Last Updated: 08/2025*
+*Documentation Last Updated: 2025*

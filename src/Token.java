@@ -4,7 +4,7 @@ enum TokenType {
 
     // Keywords
     LET, IF, ELSE, WHILE, FOR, FUNCTION, RETURN, TRUE, FALSE, PRINT,
-    CLASS, THIS, SUPER, NEW,
+    CLASS, EXTENDS, THIS, SUPER, NEW,
 
     // Types
     INT, DOUBLE, STRING_TYPE, BOOL, VOID,

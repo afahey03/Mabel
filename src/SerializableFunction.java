@@ -199,6 +199,13 @@ class SerializableFunction implements MabelCallable, Serializable {
     return true;
   }
 
+  static SerializableExpression superCall(String methodName, List<SerializableExpression> arguments) {
+    SerializableExpression expr = new SerializableExpression("superCall");
+    expr.name = methodName;
+    expr.arguments = arguments;
+    return expr;
+  }
+
   private Object evaluateSerializableExpression(SerializableExpression expr, Environment env, VirtualMachine vm) {
     switch (expr.type) {
       case "literal":
@@ -213,6 +220,31 @@ class SerializableFunction implements MabelCallable, Serializable {
             return globals.get(expr.name);
           }
           throw e;
+        }
+
+      case "superCall":
+        try {
+          Object thisObj = env.get("this");
+          if (!(thisObj instanceof SerializableInstance)) {
+            throw new RuntimeException("'super' can only be used in a class method.");
+          }
+          SerializableInstance instance = (SerializableInstance) thisObj;
+
+          SerializableFunction superMethod = instance.getSuperMethod(expr.name);
+          if (superMethod == null) {
+            throw new RuntimeException("Undefined super method '" + expr.name + "'.");
+          }
+
+          List<Object> args = new ArrayList<>();
+          if (expr.arguments != null) {
+            for (SerializableExpression arg : expr.arguments) {
+              args.add(evaluateSerializableExpression(arg, env, vm));
+            }
+          }
+
+          return superMethod.callAsMethod(instance, vm, args);
+        } catch (RuntimeException e) {
+          throw new RuntimeException("Cannot use 'super' outside a class.");
         }
 
       case "unary":

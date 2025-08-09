@@ -311,15 +311,22 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             methods.put(method.name.lexeme, function);
         }
 
-        SerializableClass superclass = null;
-
-        SerializableClass klass = new SerializableClass(
-                stmt.name.lexeme,
-                superclass,
-                methods,
-                defaultFieldValues);
-
         int constant = makeConstant(stmt.name.lexeme);
+
+        SerializableClass klass;
+        if (stmt.superclass != null) {
+            klass = new SerializableClass(
+                    stmt.name.lexeme,
+                    stmt.superclass.name.lexeme,
+                    methods,
+                    defaultFieldValues);
+        } else {
+            klass = SerializableClass.createWithoutSuperclass(
+                    stmt.name.lexeme,
+                    methods,
+                    defaultFieldValues);
+        }
+
         emitConstant(klass);
         emitBytes(OpCode.DEFINE_GLOBAL, (byte) constant);
 

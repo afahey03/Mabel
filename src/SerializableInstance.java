@@ -13,15 +13,12 @@ class SerializableInstance implements Serializable {
   }
 
   Object get(String name) {
-    // Check fields first
     if (fields.containsKey(name)) {
       return fields.get(name);
     }
 
-    // Then check for methods
     SerializableFunction method = klass.findMethod(name);
     if (method != null) {
-      // Return a bound method (method with 'this' already set)
       return new BoundMethod(this, method);
     }
 
@@ -32,12 +29,19 @@ class SerializableInstance implements Serializable {
     fields.put(name, value);
   }
 
+  SerializableFunction getSuperMethod(String name) {
+    SerializableClass superclass = klass.getSuperclass();
+    if (superclass != null) {
+      return superclass.findMethod(name);
+    }
+    return null;
+  }
+
   @Override
   public String toString() {
     return klass.getName() + " instance";
   }
 
-  // Helper class for bound methods
   static class BoundMethod implements MabelCallable, Serializable {
     private static final long serialVersionUID = 1L;
 

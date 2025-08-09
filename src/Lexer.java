@@ -25,6 +25,7 @@ class Lexer {
         keywords.put("not", TokenType.NOT);
         keywords.put("print", TokenType.PRINT);
         keywords.put("class", TokenType.CLASS);
+        keywords.put("extends", TokenType.EXTENDS);
         keywords.put("this", TokenType.THIS);
         keywords.put("super", TokenType.SUPER);
         keywords.put("new", TokenType.NEW);
