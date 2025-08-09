@@ -6,8 +6,8 @@
 1. [Introduction](#introduction)
 2. [Getting Started](#getting-started)
 3. [Language Basics](#language-basics)
-4. [Data Types](#data-types)
-5. [Variables](#variables)
+4. [Variables](#variables)
+5. [Data Types](#data-types)
 6. [Operators](#operators)
 7. [Control Flow](#control-flow)
 8. [Functions](#functions)
@@ -73,6 +73,16 @@ print "Array: " + str([1, 2, 3]) // Print arrays
 ```
 **Note:** `print` is a statement keyword, not a function - no parentheses needed.
 
+## Variables
+
+### Declaration
+Variables are declared with `let`:
+```javascript
+let x = 10
+let name = "Bob"
+let items = []
+```
+
 ## Data Types
 
 ### Numbers
@@ -109,16 +119,6 @@ let numbers = [1, 2, 3, 4, 5]
 let mixed = [1, "two", 3.5, true, null]
 let nested = [[1, 2], [3, 4], [5, 6]]
 let empty = []
-```
-
-## Variables
-
-### Declaration
-Variables are declared with `let`:
-```javascript
-let x = 10
-let name = "Bob"
-let items = []
 ```
 
 ### Assignment
