@@ -461,21 +461,7 @@ Checks if an array contains an item.
 
 ## Examples
 
-### Example 1: Fibonacci Sequence
-```javascript
-function fibonacci(n) {
-    if (n <= 1) {
-        return n
-    }
-    return fibonacci(n - 1) + fibonacci(n - 2)
-}
-
-for (let i = 0; i < 10; i = i + 1) {
-    print "fib(" + str(i) + ") = " + str(fibonacci(i))
-}
-```
-
-### Example 2: Bubble Sort Implementation
+### Example 1: Bubble Sort Implementation
 ```javascript
 function bubbleSort(arr) {
     let n = len(arr)
@@ -505,7 +491,7 @@ bubbleSort(numbers)
 print "Sorted: " + str(numbers)
 ```
 
-### Example 3: Stack-based Calculator
+### Example 2: Stack-based Calculator
 ```javascript
 class Calculator {
     function init() {
@@ -549,7 +535,7 @@ calc.multiply()   // 15 * 2 = 30
 print "Result: " + str(calc.result())
 ```
 
-### Example 4: Todo List Manager
+### Example 3: Todo List Manager
 ```javascript
 class TodoList {
     function init(owner) {
