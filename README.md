@@ -53,7 +53,7 @@ java -jar hello.jar
 ## Language Basics
 
 ### Program Structure
-- Statements are terminated by newlines or semicolons
+- Statements are terminated by newlines
 - Code blocks use curly braces `{}`
 - Indentation is not significant but recommended for readability
 - Entry point is the top-level code (no main function required)
@@ -81,7 +81,6 @@ All numbers are double-precision floating point:
 let integer = 42
 let decimal = 3.14159
 let negative = -17.5
-let scientific = 1.23e10  // If supported by lexer
 ```
 
 ### Strings
