@@ -95,4 +95,17 @@ class SerializableExpression implements Serializable {
     expr.indexSetValue = value;
     return expr;
   }
+
+  static SerializableExpression superExpr(String methodName) {
+    SerializableExpression expr = new SerializableExpression("super");
+    expr.name = methodName;
+    return expr;
+  }
+
+  static SerializableExpression superMethodCall(String methodName, List<SerializableExpression> arguments) {
+    SerializableExpression expr = new SerializableExpression("superMethodCall");
+    expr.name = methodName;
+    expr.arguments = arguments;
+    return expr;
+  }
 }
