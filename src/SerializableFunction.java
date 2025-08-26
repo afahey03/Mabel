@@ -199,13 +199,6 @@ class SerializableFunction implements MabelCallable, Serializable {
     return true;
   }
 
-  static SerializableExpression superCall(String methodName, List<SerializableExpression> arguments) {
-    SerializableExpression expr = new SerializableExpression("superCall");
-    expr.name = methodName;
-    expr.arguments = arguments;
-    return expr;
-  }
-
   private Object evaluateSerializableExpression(SerializableExpression expr, Environment env, VirtualMachine vm) {
     switch (expr.type) {
       case "literal":
@@ -222,7 +215,33 @@ class SerializableFunction implements MabelCallable, Serializable {
           throw e;
         }
 
-      case "superCall":
+      case "super":
+        try {
+          Object thisObj = env.get("this");
+          if (!(thisObj instanceof SerializableInstance)) {
+            throw new RuntimeException("'super' can only be used in a class method.");
+          }
+          SerializableInstance instance = (SerializableInstance) thisObj;
+
+          String methodName = expr.name;
+          if (methodName == null) {
+            throw new RuntimeException("Super access requires a method name.");
+          }
+
+          SerializableFunction superMethod = instance.getSuperMethod(methodName);
+          if (superMethod == null) {
+            throw new RuntimeException("Undefined super method '" + methodName + "'.");
+          }
+
+          return new SerializableInstance.BoundMethod(instance, superMethod);
+        } catch (RuntimeException e) {
+          if (e.getMessage().contains("Undefined variable")) {
+            throw new RuntimeException("Cannot use 'super' outside a class method.");
+          }
+          throw e;
+        }
+
+      case "superMethodCall":
         try {
           Object thisObj = env.get("this");
           if (!(thisObj instanceof SerializableInstance)) {
@@ -244,7 +263,10 @@ class SerializableFunction implements MabelCallable, Serializable {
 
           return superMethod.callAsMethod(instance, vm, args);
         } catch (RuntimeException e) {
-          throw new RuntimeException("Cannot use 'super' outside a class.");
+          if (e.getMessage().contains("Undefined variable")) {
+            throw new RuntimeException("Cannot use 'super' outside a class method.");
+          }
+          throw e;
         }
 
       case "unary":

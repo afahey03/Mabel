@@ -426,6 +426,16 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                     convertExpression(binExpr.right));
         } else if (expr instanceof Expr.Call) {
             Expr.Call callExpr = (Expr.Call) expr;
+
+            if (callExpr.callee instanceof Expr.Super) {
+                Expr.Super superExpr = (Expr.Super) callExpr.callee;
+                List<SerializableExpression> args = new ArrayList<>();
+                for (Expr arg : callExpr.arguments) {
+                    args.add(convertExpression(arg));
+                }
+                return SerializableExpression.superMethodCall(superExpr.method.lexeme, args);
+            }
+
             List<SerializableExpression> args = new ArrayList<>();
             for (Expr arg : callExpr.arguments) {
                 args.add(convertExpression(arg));
@@ -444,6 +454,9 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                     convertExpression(setExpr.value));
         } else if (expr instanceof Expr.This) {
             return SerializableExpression.thisExpr();
+        } else if (expr instanceof Expr.Super) {
+            Expr.Super superExpr = (Expr.Super) expr;
+            return SerializableExpression.superExpr(superExpr.method.lexeme);
         } else if (expr instanceof Expr.Assign) {
             Expr.Assign assignExpr = (Expr.Assign) expr;
             return SerializableExpression.assign(
