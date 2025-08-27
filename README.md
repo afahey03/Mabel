@@ -721,8 +721,6 @@ program.mabel → [Compiler] → program.mbc + program.jar
 ### Current Limitations
 - No multi-line comments
 - No string escape sequences  
-- No `super()` constructor calls (must manually initialize parent fields)
-- No `super.method()` calls (cannot call parent's version of overridden method)
 - No interfaces or abstract classes
 - No static class members
 - No exception handling (try/catch)
@@ -735,8 +733,6 @@ program.mabel → [Compiler] → program.mbc + program.jar
 - No private/protected members (all members are public)
 
 ### Planned Enhancements
-- `super()` constructor calls for easier parent initialization
-- `super.method()` calls to invoke parent methods
 - String escape sequences (`\n`, `\t`, etc.)
 - Multi-line comments (`/* */`)
 - Exception handling
