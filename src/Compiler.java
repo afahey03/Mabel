@@ -2,6 +2,7 @@ import java.util.*;
 
 class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Chunk chunk = new Chunk();
+    private Map<String, List<String>> interfaces = new HashMap<>();
 
     public Compiler() {
     }
@@ -283,6 +284,25 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitInterfaceStmt(Stmt.Interface stmt) {
+        // System.out.println("DEBUG: Compiling interface: " + stmt.name.lexeme);
+
+        List<String> requiredMethods = new ArrayList<>();
+        for (Token method : stmt.methods) {
+            requiredMethods.add(method.lexeme);
+        }
+
+        interfaces.put(stmt.name.lexeme, requiredMethods);
+
+        SerializableInterface interfaceObj = new SerializableInterface(stmt.name.lexeme, requiredMethods);
+        int constant = makeConstant(stmt.name.lexeme);
+        emitConstant(interfaceObj);
+        emitBytes(OpCode.DEFINE_GLOBAL, (byte) constant);
+
+        return null;
+    }
+
+    @Override
     public Void visitClassStmt(Stmt.Class stmt) {
         // System.out.println("DEBUG: Compiling class: " + stmt.name.lexeme);
 
@@ -311,6 +331,27 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             methods.put(method.name.lexeme, function);
         }
 
+        List<String> implementedInterfaces = new ArrayList<>();
+        for (Token interfaceToken : stmt.interfaces) {
+            String interfaceName = interfaceToken.lexeme;
+            implementedInterfaces.add(interfaceName);
+
+            if (interfaces.containsKey(interfaceName)) {
+                List<String> requiredMethods = interfaces.get(interfaceName);
+
+                for (String required : requiredMethods) {
+                    if (!methods.containsKey(required)) {
+                        MabelCompiler.error(stmt.name,
+                                "Class " + stmt.name.lexeme + " must implement method '" +
+                                        required + "' from interface " + interfaceName);
+                    }
+                }
+            } else {
+                System.out.println("Warning: Interface " + interfaceName +
+                        " not found during compilation. Will check at runtime.");
+            }
+        }
+
         int constant = makeConstant(stmt.name.lexeme);
 
         SerializableClass klass;
@@ -319,12 +360,15 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                     stmt.name.lexeme,
                     stmt.superclass.name.lexeme,
                     methods,
-                    defaultFieldValues);
+                    defaultFieldValues,
+                    implementedInterfaces);
         } else {
-            klass = SerializableClass.createWithoutSuperclass(
+            klass = new SerializableClass(
                     stmt.name.lexeme,
+                    null,
                     methods,
-                    defaultFieldValues);
+                    defaultFieldValues,
+                    implementedInterfaces);
         }
 
         emitConstant(klass);

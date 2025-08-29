@@ -9,21 +9,57 @@ class SerializableClass implements MabelCallable, Serializable {
   private transient SerializableClass superclass;
   private final Map<String, SerializableFunction> methods;
   private final Map<String, Object> defaultFieldValues;
+  private final List<String> implementedInterfaces;
 
   SerializableClass(String name, String superclassName,
       Map<String, SerializableFunction> methods,
-      Map<String, Object> defaultFieldValues) {
+      Map<String, Object> defaultFieldValues,
+      List<String> implementedInterfaces) {
     this.name = name;
     this.superclassName = superclassName;
     this.superclass = null;
     this.methods = methods;
     this.defaultFieldValues = defaultFieldValues;
+    this.implementedInterfaces = implementedInterfaces;
+  }
+
+  SerializableClass(String name, String superclassName,
+      Map<String, SerializableFunction> methods,
+      Map<String, Object> defaultFieldValues) {
+    this(name, superclassName, methods, defaultFieldValues, new ArrayList<>());
   }
 
   static SerializableClass createWithoutSuperclass(String name,
       Map<String, SerializableFunction> methods,
       Map<String, Object> defaultFieldValues) {
-    return new SerializableClass(name, null, methods, defaultFieldValues);
+    return new SerializableClass(name, null, methods, defaultFieldValues, new ArrayList<>());
+  }
+
+  public List<String> getImplementedInterfaces() {
+    return new ArrayList<>(implementedInterfaces);
+  }
+
+  public boolean implementsInterface(String interfaceName) {
+    return implementedInterfaces.contains(interfaceName);
+  }
+
+  public void validateInterfaces(Map<String, Object> globals) {
+    for (String interfaceName : implementedInterfaces) {
+      Object interfaceObj = globals.get(interfaceName);
+      if (interfaceObj instanceof SerializableInterface) {
+        SerializableInterface iface = (SerializableInterface) interfaceObj;
+        if (!iface.isImplementedBy(this)) {
+          List<String> missing = new ArrayList<>();
+          for (String method : iface.getRequiredMethods()) {
+            if (findMethod(method) == null) {
+              missing.add(method);
+            }
+          }
+          throw new RuntimeException("Class " + name + " does not implement required methods from interface " +
+              interfaceName + ": " + missing);
+        }
+      }
+    }
   }
 
   public void resolveSuperclass(Map<String, Object> globals) {

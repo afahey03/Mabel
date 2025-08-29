@@ -284,6 +284,8 @@ abstract class Stmt {
         R visitWhileStmt(While stmt);
 
         R visitForStmt(For stmt);
+
+        R visitInterfaceStmt(Interface stmt);
     }
 
     static class For extends Stmt {
@@ -305,6 +307,21 @@ abstract class Stmt {
         }
     }
 
+    static class Interface extends Stmt {
+        final Token name;
+        final List<Token> methods;
+
+        Interface(Token name, List<Token> methods) {
+            this.name = name;
+            this.methods = methods;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitInterfaceStmt(this);
+        }
+    }
+
     static class Block extends Stmt {
         final List<Stmt> statements;
 
@@ -321,11 +338,13 @@ abstract class Stmt {
     static class Class extends Stmt {
         final Token name;
         final Expr.Variable superclass;
+        final List<Token> interfaces;
         final List<Stmt.Function> methods;
 
-        Class(Token name, Expr.Variable superclass, List<Stmt.Function> methods) {
+        Class(Token name, Expr.Variable superclass, List<Token> interfaces, List<Stmt.Function> methods) {
             this.name = name;
             this.superclass = superclass;
+            this.interfaces = interfaces;
             this.methods = methods;
         }
 

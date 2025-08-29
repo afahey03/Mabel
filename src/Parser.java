@@ -28,6 +28,8 @@ class Parser {
 
     private Stmt declaration() {
         try {
+            if (match(TokenType.INTERFACE))
+                return interfaceDeclaration();
             if (match(TokenType.CLASS))
                 return classDeclaration();
             if (match(TokenType.FUNCTION))
@@ -42,6 +44,37 @@ class Parser {
         }
     }
 
+    private Stmt interfaceDeclaration() {
+        Token name = consume(TokenType.IDENTIFIER, "Expect interface name.");
+
+        consume(TokenType.LEFT_BRACE, "Expect '{' before interface body.");
+
+        List<Token> methods = new ArrayList<>();
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            if (match(TokenType.NEWLINE))
+                continue;
+
+            consume(TokenType.FUNCTION, "Expect 'function' in interface.");
+            Token methodName = consume(TokenType.IDENTIFIER, "Expect method name.");
+            methods.add(methodName);
+
+            consume(TokenType.LEFT_PAREN, "Expect '(' after method name.");
+
+            while (!check(TokenType.RIGHT_PAREN) && !isAtEnd()) {
+                advance();
+            }
+            consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+            if (match(TokenType.SEMICOLON) || match(TokenType.NEWLINE)) {
+            } else {
+                error(peek(), "Interface methods cannot have bodies.");
+            }
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after interface body.");
+        return new Stmt.Interface(name, methods);
+    }
+
     private Stmt classDeclaration() {
         Token name = consume(TokenType.IDENTIFIER, "Expect class name.");
 
@@ -49,6 +82,14 @@ class Parser {
         if (match(TokenType.EXTENDS)) {
             consume(TokenType.IDENTIFIER, "Expect superclass name.");
             superclass = new Expr.Variable(previous());
+        }
+
+        List<Token> interfaces = new ArrayList<>();
+        if (match(TokenType.IMPLEMENTS)) {
+            do {
+                Token interfaceName = consume(TokenType.IDENTIFIER, "Expect interface name.");
+                interfaces.add(interfaceName);
+            } while (match(TokenType.COMMA));
         }
 
         consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
@@ -67,7 +108,7 @@ class Parser {
         }
 
         consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
-        return new Stmt.Class(name, superclass, methods);
+        return new Stmt.Class(name, superclass, interfaces, methods);
     }
 
     private Stmt.Function functionBody(String kind) {
@@ -529,6 +570,8 @@ class Parser {
                 case NEW:
                 case INT:
                 case EXTENDS:
+                case IMPLEMENTS:
+                case INTERFACE:
                     return;
             }
 
