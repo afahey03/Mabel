@@ -49,7 +49,6 @@ class VirtualMachine {
             }
         });
 
-        // New array built-ins
         globals.put("push", new MabelBuiltin("push", 2) {
             @Override
             public Object call(List<Object> args) {
@@ -257,6 +256,104 @@ class VirtualMachine {
                 @SuppressWarnings("unchecked")
                 List<Object> list = (List<Object>) arr;
                 return new ArrayList<>(list);
+            }
+        });
+
+        globals.put("hasMethod", new MabelBuiltin("hasMethod", 2) {
+            @Override
+            public Object call(List<Object> args) {
+                Object obj = args.get(0);
+                Object methodName = args.get(1);
+
+                if (!(methodName instanceof String)) {
+                    throw new RuntimeException("Method name must be a string");
+                }
+
+                String method = (String) methodName;
+
+                if (obj instanceof SerializableInstance) {
+                    try {
+                        ((SerializableInstance) obj).get(method);
+                        return true;
+                    } catch (RuntimeException e) {
+                        return false;
+                    }
+                } else if (obj instanceof MabelInstance) {
+                    try {
+                        ((MabelInstance) obj).get(new Token(TokenType.IDENTIFIER, method, null, 0));
+                        return true;
+                    } catch (RuntimeException e) {
+                        return false;
+                    }
+                }
+
+                return false;
+            }
+        });
+
+        globals.put("requireMethods", new MabelBuiltin("requireMethods", 2) {
+            @Override
+            public Object call(List<Object> args) {
+                Object obj = args.get(0);
+                Object methodList = args.get(1);
+
+                if (!(methodList instanceof List)) {
+                    throw new RuntimeException("Second argument must be an array of method names");
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Object> methods = (List<Object>) methodList;
+                List<String> missing = new ArrayList<>();
+
+                for (Object methodObj : methods) {
+                    if (!(methodObj instanceof String)) {
+                        throw new RuntimeException("Method names must be strings");
+                    }
+
+                    String method = (String) methodObj;
+                    boolean hasIt = false;
+
+                    if (obj instanceof SerializableInstance) {
+                        try {
+                            ((SerializableInstance) obj).get(method);
+                            hasIt = true;
+                        } catch (RuntimeException e) {
+                        }
+                    } else if (obj instanceof MabelInstance) {
+                        try {
+                            ((MabelInstance) obj).get(new Token(TokenType.IDENTIFIER, method, null, 0));
+                            hasIt = true;
+                        } catch (RuntimeException e) {
+                        }
+                    }
+
+                    if (!hasIt) {
+                        missing.add(method);
+                    }
+                }
+
+                if (!missing.isEmpty()) {
+                    throw new RuntimeException("Object missing required methods: " + String.join(", ", missing));
+                }
+
+                return true;
+            }
+        });
+
+        globals.put("getMethods", new MabelBuiltin("getMethods", 1) {
+            @Override
+            public Object call(List<Object> args) {
+                Object obj = args.get(0);
+                List<Object> methodNames = new ArrayList<>();
+
+                if (obj instanceof SerializableInstance) {
+                    SerializableInstance instance = (SerializableInstance) obj;
+                    return methodNames;
+                } else if (obj instanceof SerializableClass) {
+                    return methodNames;
+                }
+
+                return methodNames;
             }
         });
     }

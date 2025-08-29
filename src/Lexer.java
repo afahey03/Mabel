@@ -34,6 +34,8 @@ class Lexer {
         keywords.put("string", TokenType.STRING_TYPE);
         keywords.put("bool", TokenType.BOOL);
         keywords.put("void", TokenType.VOID);
+        keywords.put("interface", TokenType.INTERFACE);
+        keywords.put("implements", TokenType.IMPLEMENTS);
     }
 
     Lexer(String source) {
