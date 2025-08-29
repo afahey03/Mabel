@@ -313,6 +313,30 @@ obj.field2 = newValue
 dog.name = "Max"
 ```
 
+### Interfaces
+
+```javascript
+interface Drawable {    // Defines interfaces
+    function draw()     // Method(s) to be implemented
+    function getColor()
+}
+
+class Circle implements Drawable {    // Interface access
+    function init(radius, color) {
+        this.radius = radius
+        this.color = color
+    }
+    
+    function draw() {    // Implementation of interface method(s)
+        print "Drawing " + this.color + " circle"
+    }
+    
+    function getColor() {
+        return this.color
+    }
+}
+```
+
 ### The `this` Keyword
 - Refers to the current instance
 - Required when accessing instance variables
