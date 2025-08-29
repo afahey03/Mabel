@@ -745,7 +745,7 @@ program.mabel → [Compiler] → program.mbc + program.jar
 ### Current Limitations
 - No multi-line comments
 - No string escape sequences  
-- No interfaces or abstract classes
+- No abstract classes
 - No static class members
 - No exception handling (try/catch)
 - No switch/case statements
@@ -763,7 +763,7 @@ program.mabel → [Compiler] → program.mbc + program.jar
 - Module system
 - Standard library expansion
 - Optimization improvements
-- Abstract classes and interfaces
+- Abstract classes
 - Private/protected member visibility
 
 ---
