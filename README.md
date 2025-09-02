@@ -699,7 +699,7 @@ todo.summary()
 
 ### Memory Model
 - **Garbage collection:** Automatic (handled by JVM)
-- **Stack depth:** Limited to 100 recursive calls
+- **Stack depth:** Limited to 100 recursive calls, can be changed to whatever I want it to be
 - **Maximum parameters:** 255 per function
 - **Maximum local variables:** 255 per scope
 
