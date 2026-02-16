@@ -1,7 +1,5 @@
 # Mabel Programming Language Documentation
 
-**Version 1.0.0**
-
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Getting Started](#getting-started)
