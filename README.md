@@ -833,6 +833,4 @@ c.describe()  // "A red circle with radius 5"
 
 ---
 
-*Mabel Programming Language - Version 1.0.0*  
 *Created by Aidan Fahey*  
-*Documentation Last Updated: 2026*
