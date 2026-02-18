@@ -830,5 +830,5 @@ c.describe()  // "A red circle with radius 5"
 ```
 
 ---
-
-*Created by Aidan Fahey*  
+## Author
+###Aidan Fahey
