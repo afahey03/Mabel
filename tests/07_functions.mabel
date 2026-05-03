@@ -1,0 +1,7 @@
+// Test: function declaration and call
+function add(a, b) {
+    return a + b
+}
+
+print str(add(3, 4))
+print str(add(10, 20))

@@ -1,0 +1,8 @@
+# Mabel compiled bytecode
+*.mbc
+
+# Maven build output
+target/
+
+# IDE
+.vscode/

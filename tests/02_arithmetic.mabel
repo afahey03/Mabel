@@ -1,0 +1,6 @@
+// Test: arithmetic operators
+print str(1 + 2)
+print str(10 - 4)
+print str(3 * 4)
+print str(15 / 3)
+print str(10 % 3)

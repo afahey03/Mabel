@@ -1,0 +1,22 @@
+// Test: class with fields and methods
+class Point {
+    function init(x, y) {
+        this.x = x
+        this.y = y
+    }
+
+    function toString() {
+        return "(" + str(this.x) + ", " + str(this.y) + ")"
+    }
+
+    function translate(dx, dy) {
+        this.x = this.x + dx
+        this.y = this.y + dy
+    }
+}
+
+let p = Point(3, 4)
+print p.toString()
+p.translate(1, 2)
+print p.toString()
+print str(p.x)

@@ -1,0 +1,6 @@
+// Test: string operations
+let s = "Hello"
+print str(len(s))
+print str(s + " World")
+let n = num("42")
+print str(n + 1)

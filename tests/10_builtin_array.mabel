@@ -1,0 +1,25 @@
+// Test: built-in array functions
+let arr = [3, 1, 2]
+push(arr, 4)
+print str(len(arr))
+
+let removed = pop(arr)
+print str(removed)
+print str(len(arr))
+
+sort(arr)
+print str(arr[0])
+print str(arr[1])
+print str(arr[2])
+
+reverse(arr)
+print str(arr[0])
+
+let s = shift(arr)
+print str(s)
+
+unshift(arr, 99)
+print str(arr[0])
+
+print str(contains(arr, 99))
+print str(indexOf(arr, 99))

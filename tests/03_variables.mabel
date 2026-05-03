@@ -1,0 +1,7 @@
+// Test: variable declaration and assignment
+let x = 10
+print str(x)
+x = 20
+print str(x)
+let name = "Mabel"
+print name

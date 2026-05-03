@@ -1,0 +1,7 @@
+// Test: nested arrays
+let matrix = [[1, 2], [3, 4], [5, 6]]
+print str(matrix[0][0])
+print str(matrix[1][1])
+print str(matrix[2][0])
+matrix[0][1] = 99
+print str(matrix[0][1])

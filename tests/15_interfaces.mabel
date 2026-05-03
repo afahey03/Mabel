@@ -1,0 +1,23 @@
+// Test: interfaces
+interface Drawable {
+    function draw()
+    function getColor()
+}
+
+class Circle implements Drawable {
+    function init(color) {
+        this.color = color
+    }
+
+    function draw() {
+        print "Drawing " + this.color + " circle"
+    }
+
+    function getColor() {
+        return this.color
+    }
+}
+
+let c = Circle("red")
+c.draw()
+print c.getColor()

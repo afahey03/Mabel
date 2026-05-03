@@ -1,0 +1,7 @@
+// Test: logical operators
+print str(true and true)
+print str(true and false)
+print str(false or true)
+print str(false or false)
+print str(not true)
+print str(not false)

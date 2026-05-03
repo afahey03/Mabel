@@ -1,0 +1,17 @@
+// Test: slice, copy, indexOf, contains, clear
+let arr = [0, 1, 2, 3, 4]
+let sliced = slice(arr, 1, 3)
+print str(sliced[0])
+print str(sliced[1])
+print str(len(sliced))
+
+let c = copy(arr)
+push(c, 5)
+print str(len(arr))
+print str(len(c))
+
+print str(indexOf(arr, 3))
+print str(contains(arr, 99))
+
+clear(arr)
+print str(len(arr))

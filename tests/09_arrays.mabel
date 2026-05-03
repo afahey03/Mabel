@@ -1,0 +1,7 @@
+// Test: arrays — creation, access, modification
+let arr = [10, 20, 30]
+print str(arr[0])
+print str(arr[2])
+arr[1] = 99
+print str(arr[1])
+print str(len(arr))

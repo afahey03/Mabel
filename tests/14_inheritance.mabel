@@ -1,0 +1,27 @@
+// Test: inheritance and method overriding
+class Animal {
+    function init(name) {
+        this.name = name
+    }
+
+    function speak() {
+        return this.name + " makes a sound"
+    }
+}
+
+class Dog extends Animal {
+    function init(name) {
+        this.name = name
+    }
+
+    function speak() {
+        return this.name + " barks"
+    }
+}
+
+let a = Animal("Cat")
+print a.speak()
+
+let d = Dog("Rex")
+print d.speak()
+print d.name
