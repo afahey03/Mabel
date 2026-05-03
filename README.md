@@ -770,8 +770,8 @@ program.mabel → [Compiler] → program.mbc + program.jar
 
 ### Basic Syntax
 ```javascript
-let x = 10                    // Variable
-print "Hello"                 // Print
+let x = 10                   // Variable
+print "Hello"                // Print
 if (x > 5) { }               // Conditional
 while (x < 10) { }           // Loop
 for (let i = 0; i < 5; i = i + 1) { }  // For loop
