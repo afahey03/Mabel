@@ -7,36 +7,32 @@ class Lexer {
     private int current = 0;
     private int line = 1;
 
-    private static final Map<String, TokenType> keywords;
-
-    static {
-        keywords = new HashMap<>();
-        keywords.put("let", TokenType.LET);
-        keywords.put("if", TokenType.IF);
-        keywords.put("else", TokenType.ELSE);
-        keywords.put("while", TokenType.WHILE);
-        keywords.put("for", TokenType.FOR);
-        keywords.put("function", TokenType.FUNCTION);
-        keywords.put("return", TokenType.RETURN);
-        keywords.put("true", TokenType.TRUE);
-        keywords.put("false", TokenType.FALSE);
-        keywords.put("and", TokenType.AND);
-        keywords.put("or", TokenType.OR);
-        keywords.put("not", TokenType.NOT);
-        keywords.put("print", TokenType.PRINT);
-        keywords.put("class", TokenType.CLASS);
-        keywords.put("extends", TokenType.EXTENDS);
-        keywords.put("this", TokenType.THIS);
-        keywords.put("super", TokenType.SUPER);
-        keywords.put("new", TokenType.NEW);
-        keywords.put("int", TokenType.INT);
-        keywords.put("double", TokenType.DOUBLE);
-        keywords.put("string", TokenType.STRING_TYPE);
-        keywords.put("bool", TokenType.BOOL);
-        keywords.put("void", TokenType.VOID);
-        keywords.put("interface", TokenType.INTERFACE);
-        keywords.put("implements", TokenType.IMPLEMENTS);
-    }
+    private static final Map<String, TokenType> keywords = Map.ofEntries(
+            Map.entry("let", TokenType.LET),
+            Map.entry("if", TokenType.IF),
+            Map.entry("else", TokenType.ELSE),
+            Map.entry("while", TokenType.WHILE),
+            Map.entry("for", TokenType.FOR),
+            Map.entry("function", TokenType.FUNCTION),
+            Map.entry("return", TokenType.RETURN),
+            Map.entry("true", TokenType.TRUE),
+            Map.entry("false", TokenType.FALSE),
+            Map.entry("and", TokenType.AND),
+            Map.entry("or", TokenType.OR),
+            Map.entry("not", TokenType.NOT),
+            Map.entry("print", TokenType.PRINT),
+            Map.entry("class", TokenType.CLASS),
+            Map.entry("extends", TokenType.EXTENDS),
+            Map.entry("this", TokenType.THIS),
+            Map.entry("super", TokenType.SUPER),
+            Map.entry("new", TokenType.NEW),
+            Map.entry("int", TokenType.INT),
+            Map.entry("double", TokenType.DOUBLE),
+            Map.entry("string", TokenType.STRING_TYPE),
+            Map.entry("bool", TokenType.BOOL),
+            Map.entry("void", TokenType.VOID),
+            Map.entry("interface", TokenType.INTERFACE),
+            Map.entry("implements", TokenType.IMPLEMENTS));
 
     Lexer(String source) {
         this.source = source;

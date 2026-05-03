@@ -44,41 +44,18 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         compile(expr.right);
 
         switch (expr.operator.type) {
-            case PLUS:
-                emitByte(OpCode.ADD);
-                break;
-            case MINUS:
-                emitByte(OpCode.SUBTRACT);
-                break;
-            case MULTIPLY:
-                emitByte(OpCode.MULTIPLY);
-                break;
-            case DIVIDE:
-                emitByte(OpCode.DIVIDE);
-                break;
-            case MODULO:
-                emitByte(OpCode.MODULO);
-                break;
-            case EQUALS:
-                emitByte(OpCode.EQUAL);
-                break;
-            case NOT_EQUALS:
-                emitBytes(OpCode.EQUAL, OpCode.NOT);
-                break;
-            case GREATER:
-                emitByte(OpCode.GREATER);
-                break;
-            case GREATER_EQUAL:
-                emitBytes(OpCode.LESS, OpCode.NOT);
-                break;
-            case LESS:
-                emitByte(OpCode.LESS);
-                break;
-            case LESS_EQUAL:
-                emitBytes(OpCode.GREATER, OpCode.NOT);
-                break;
-            default:
-                throw new RuntimeException("Unknown binary operator: " + expr.operator.type);
+            case PLUS -> emitByte(OpCode.ADD);
+            case MINUS -> emitByte(OpCode.SUBTRACT);
+            case MULTIPLY -> emitByte(OpCode.MULTIPLY);
+            case DIVIDE -> emitByte(OpCode.DIVIDE);
+            case MODULO -> emitByte(OpCode.MODULO);
+            case EQUALS -> emitByte(OpCode.EQUAL);
+            case NOT_EQUALS -> emitBytes(OpCode.EQUAL, OpCode.NOT);
+            case GREATER -> emitByte(OpCode.GREATER);
+            case GREATER_EQUAL -> emitBytes(OpCode.LESS, OpCode.NOT);
+            case LESS -> emitByte(OpCode.LESS);
+            case LESS_EQUAL -> emitBytes(OpCode.GREATER, OpCode.NOT);
+            default -> throw new RuntimeException("Unknown binary operator: " + expr.operator.type);
         }
         return null;
     }
@@ -88,14 +65,9 @@ class Compiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         compile(expr.right);
 
         switch (expr.operator.type) {
-            case MINUS:
-                emitByte(OpCode.NEGATE);
-                break;
-            case NOT:
-                emitByte(OpCode.NOT);
-                break;
-            default:
-                throw new RuntimeException("Unknown unary operator: " + expr.operator.type);
+            case MINUS -> emitByte(OpCode.NEGATE);
+            case NOT -> emitByte(OpCode.NOT);
+            default -> throw new RuntimeException("Unknown unary operator: " + expr.operator.type);
         }
         return null;
     }

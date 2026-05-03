@@ -16,10 +16,10 @@ class VirtualMachine {
             @Override
             public Object call(List<Object> args) {
                 Object arg = args.get(0);
-                if (arg instanceof String) {
-                    return (double) ((String) arg).length();
-                } else if (arg instanceof List) {
-                    return (double) ((List<?>) arg).size();
+                if (arg instanceof String s) {
+                    return (double) s.length();
+                } else if (arg instanceof List<?> list) {
+                    return (double) list.size();
                 }
                 throw new RuntimeException("'len' can only be applied to strings and arrays");
             }
@@ -36,9 +36,9 @@ class VirtualMachine {
             @Override
             public Object call(List<Object> args) {
                 Object arg = args.get(0);
-                if (arg instanceof String) {
+                if (arg instanceof String s) {
                     try {
-                        return Double.parseDouble((String) arg);
+                        return Double.parseDouble(s);
                     } catch (NumberFormatException e) {
                         throw new RuntimeException("Cannot convert '" + arg + "' to number");
                     }
@@ -211,10 +211,10 @@ class VirtualMachine {
                 List<Object> list = (List<Object>) arr;
 
                 list.sort((a, b) -> {
-                    if (a instanceof Double && b instanceof Double) {
-                        return Double.compare((Double) a, (Double) b);
-                    } else if (a instanceof String && b instanceof String) {
-                        return ((String) a).compareTo((String) b);
+                    if (a instanceof Double da && b instanceof Double db) {
+                        return Double.compare(da, db);
+                    } else if (a instanceof String sa && b instanceof String sb) {
+                        return sa.compareTo(sb);
                     } else {
                         if (a instanceof Double && b instanceof String)
                             return -1;
@@ -265,22 +265,20 @@ class VirtualMachine {
                 Object obj = args.get(0);
                 Object methodName = args.get(1);
 
-                if (!(methodName instanceof String)) {
+                if (!(methodName instanceof String method)) {
                     throw new RuntimeException("Method name must be a string");
                 }
 
-                String method = (String) methodName;
-
-                if (obj instanceof SerializableInstance) {
+                if (obj instanceof SerializableInstance si) {
                     try {
-                        ((SerializableInstance) obj).get(method);
+                        si.get(method);
                         return true;
                     } catch (RuntimeException e) {
                         return false;
                     }
-                } else if (obj instanceof MabelInstance) {
+                } else if (obj instanceof MabelInstance mi) {
                     try {
-                        ((MabelInstance) obj).get(new Token(TokenType.IDENTIFIER, method, null, 0));
+                        mi.get(new Token(TokenType.IDENTIFIER, method, null, 0));
                         return true;
                     } catch (RuntimeException e) {
                         return false;
@@ -306,22 +304,21 @@ class VirtualMachine {
                 List<String> missing = new ArrayList<>();
 
                 for (Object methodObj : methods) {
-                    if (!(methodObj instanceof String)) {
+                    if (!(methodObj instanceof String method)) {
                         throw new RuntimeException("Method names must be strings");
                     }
 
-                    String method = (String) methodObj;
                     boolean hasIt = false;
 
-                    if (obj instanceof SerializableInstance) {
+                    if (obj instanceof SerializableInstance si) {
                         try {
-                            ((SerializableInstance) obj).get(method);
+                            si.get(method);
                             hasIt = true;
                         } catch (RuntimeException e) {
                         }
-                    } else if (obj instanceof MabelInstance) {
+                    } else if (obj instanceof MabelInstance mi) {
                         try {
-                            ((MabelInstance) obj).get(new Token(TokenType.IDENTIFIER, method, null, 0));
+                            mi.get(new Token(TokenType.IDENTIFIER, method, null, 0));
                             hasIt = true;
                         } catch (RuntimeException e) {
                         }
@@ -426,45 +423,45 @@ class VirtualMachine {
                 case GREATER: {
                     Object b = pop();
                     Object a = pop();
-                    if (!(a instanceof Double && b instanceof Double)) {
+                    if (!(a instanceof Double da && b instanceof Double db)) {
                         throw new RuntimeException("Operands must be numbers.");
                     }
-                    push((Double) a > (Double) b);
+                    push(da > db);
                     break;
                 }
 
                 case LESS: {
                     Object b = pop();
                     Object a = pop();
-                    if (!(a instanceof Double && b instanceof Double)) {
+                    if (!(a instanceof Double da && b instanceof Double db)) {
                         throw new RuntimeException("Operands must be numbers.");
                     }
-                    push((Double) a < (Double) b);
+                    push(da < db);
                     break;
                 }
 
                 case ADD: {
                     Object b = pop();
                     Object a = pop();
-                    if (a instanceof Double && b instanceof Double) {
-                        push((Double) a + (Double) b);
-                    } else if (a instanceof String && b instanceof String) {
-                        push((String) a + (String) b);
+                    if (a instanceof Double da && b instanceof Double db) {
+                        push(da + db);
+                    } else if (a instanceof String sa && b instanceof String sb) {
+                        push(sa + sb);
                     } else if (a instanceof String || b instanceof String) {
                         push(stringify(a) + stringify(b));
-                    } else if (a instanceof List && b instanceof List) {
+                    } else if (a instanceof List<?> la && b instanceof List<?> lb) {
                         List<Object> result = new ArrayList<>();
-                        result.addAll((List<?>) a);
-                        result.addAll((List<?>) b);
+                        result.addAll(la);
+                        result.addAll(lb);
                         push(result);
-                    } else if (a instanceof List) {
-                        List<Object> result = new ArrayList<>((List<?>) a);
+                    } else if (a instanceof List<?> la) {
+                        List<Object> result = new ArrayList<>(la);
                         result.add(b);
                         push(result);
-                    } else if (b instanceof List) {
+                    } else if (b instanceof List<?> lb) {
                         List<Object> result = new ArrayList<>();
                         result.add(a);
-                        result.addAll((List<?>) b);
+                        result.addAll(lb);
                         push(result);
                     } else {
                         throw new RuntimeException("Operands must be two numbers, two strings, or arrays.");
@@ -475,43 +472,43 @@ class VirtualMachine {
                 case SUBTRACT: {
                     Object b = pop();
                     Object a = pop();
-                    if (!(a instanceof Double && b instanceof Double)) {
+                    if (!(a instanceof Double da && b instanceof Double db)) {
                         throw new RuntimeException("Operands must be numbers.");
                     }
-                    push((Double) a - (Double) b);
+                    push(da - db);
                     break;
                 }
 
                 case MULTIPLY: {
                     Object b = pop();
                     Object a = pop();
-                    if (!(a instanceof Double && b instanceof Double)) {
+                    if (!(a instanceof Double da && b instanceof Double db)) {
                         throw new RuntimeException("Operands must be numbers.");
                     }
-                    push((Double) a * (Double) b);
+                    push(da * db);
                     break;
                 }
 
                 case DIVIDE: {
                     Object b = pop();
                     Object a = pop();
-                    if (!(a instanceof Double && b instanceof Double)) {
+                    if (!(a instanceof Double da && b instanceof Double db)) {
                         throw new RuntimeException("Operands must be numbers.");
                     }
-                    if ((Double) b == 0.0) {
+                    if (db == 0.0) {
                         throw new RuntimeException("Division by zero.");
                     }
-                    push((Double) a / (Double) b);
+                    push(da / db);
                     break;
                 }
 
                 case MODULO: {
                     Object b = pop();
                     Object a = pop();
-                    if (!(a instanceof Double && b instanceof Double)) {
+                    if (!(a instanceof Double da && b instanceof Double db)) {
                         throw new RuntimeException("Operands must be numbers.");
                     }
-                    push((Double) a % (Double) b);
+                    push(da % db);
                     break;
                 }
 
@@ -521,10 +518,10 @@ class VirtualMachine {
 
                 case NEGATE: {
                     Object operand = pop();
-                    if (!(operand instanceof Double)) {
+                    if (!(operand instanceof Double d)) {
                         throw new RuntimeException("Operand must be a number.");
                     }
-                    push(-(Double) operand);
+                    push(-d);
                     break;
                 }
 
@@ -556,8 +553,7 @@ class VirtualMachine {
                     int argCount = Byte.toUnsignedInt(chunk.get(ip++));
                     Object callee = peek(0);
 
-                    if (callee instanceof MabelBuiltin) {
-                        MabelBuiltin builtin = (MabelBuiltin) callee;
+                    if (callee instanceof MabelBuiltin builtin) {
                         if (argCount != builtin.arity()) {
                             throw new RuntimeException(
                                     "Expected " + builtin.arity() + " arguments but got " + argCount + ".");
@@ -569,8 +565,7 @@ class VirtualMachine {
                         }
                         Object result = builtin.call(args);
                         push(result);
-                    } else if (callee instanceof MabelCallable) {
-                        MabelCallable callable = (MabelCallable) callee;
+                    } else if (callee instanceof MabelCallable callable) {
                         if (argCount != callable.arity()) {
                             throw new RuntimeException(
                                     "Expected " + callable.arity() + " arguments but got " + argCount + ".");
@@ -582,8 +577,7 @@ class VirtualMachine {
                         }
                         Object result = callable.call(this, args);
                         push(result);
-                    } else if (callee instanceof SerializableClass) {
-                        SerializableClass klass = (SerializableClass) callee;
+                    } else if (callee instanceof SerializableClass klass) {
                         if (argCount != klass.arity()) {
                             throw new RuntimeException(
                                     "Expected " + klass.arity() + " arguments but got " + argCount + ".");
@@ -595,8 +589,7 @@ class VirtualMachine {
                         }
                         Object result = klass.call(this, args);
                         push(result);
-                    } else if (callee instanceof SerializableInstance.BoundMethod) {
-                        SerializableInstance.BoundMethod method = (SerializableInstance.BoundMethod) callee;
+                    } else if (callee instanceof SerializableInstance.BoundMethod method) {
                         if (argCount != method.arity()) {
                             throw new RuntimeException(
                                     "Expected " + method.arity() + " arguments but got " + argCount + ".");
@@ -629,16 +622,14 @@ class VirtualMachine {
                     Object index = pop();
                     Object object = pop();
 
-                    if (object instanceof List && index instanceof Double) {
-                        List<?> list = (List<?>) object;
-                        int i = ((Double) index).intValue();
+                    if (object instanceof List<?> list && index instanceof Double idx) {
+                        int i = idx.intValue();
                         if (i < 0 || i >= list.size()) {
                             throw new RuntimeException("Array index out of bounds.");
                         }
                         push(list.get(i));
-                    } else if (object instanceof String && index instanceof Double) {
-                        String str = (String) object;
-                        int i = ((Double) index).intValue();
+                    } else if (object instanceof String str && index instanceof Double idx) {
+                        int i = idx.intValue();
                         if (i < 0 || i >= str.length()) {
                             throw new RuntimeException("String index out of bounds.");
                         }
@@ -656,16 +647,14 @@ class VirtualMachine {
                     Object object = pop();
                     String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
 
-                    if (object instanceof MabelInstance) {
-                        MabelInstance instance = (MabelInstance) object;
+                    if (object instanceof MabelInstance instance) {
                         try {
                             Object value = instance.get(new Token(TokenType.IDENTIFIER, name, null, 0));
                             push(value);
                         } catch (RuntimeException e) {
                             throw new RuntimeException("Undefined property '" + name + "'.");
                         }
-                    } else if (object instanceof SerializableInstance) {
-                        SerializableInstance instance = (SerializableInstance) object;
+                    } else if (object instanceof SerializableInstance instance) {
                         try {
                             Object value = instance.get(name);
                             push(value);
@@ -683,12 +672,10 @@ class VirtualMachine {
                     String name = (String) chunk.getConstant(Byte.toUnsignedInt(chunk.get(ip++)));
                     Object value = pop();
 
-                    if (object instanceof MabelInstance) {
-                        MabelInstance instance = (MabelInstance) object;
+                    if (object instanceof MabelInstance instance) {
                         instance.set(new Token(TokenType.IDENTIFIER, name, null, 0), value);
                         push(value);
-                    } else if (object instanceof SerializableInstance) {
-                        SerializableInstance instance = (SerializableInstance) object;
+                    } else if (object instanceof SerializableInstance instance) {
                         instance.set(name, value);
                         push(value);
                     } else {
@@ -753,8 +740,8 @@ class VirtualMachine {
     private boolean isTruthy(Object object) {
         if (object == null)
             return false;
-        if (object instanceof Boolean)
-            return (Boolean) object;
+        if (object instanceof Boolean b)
+            return b;
         return true;
     }
 
